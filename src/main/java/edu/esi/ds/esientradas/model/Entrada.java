@@ -1,5 +1,7 @@
 package edu.esi.ds.esientradas.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -10,6 +12,8 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -25,12 +29,20 @@ public abstract class Entrada {
     @Enumerated(EnumType.STRING)
     protected Estado estado;
 
+    //El LAZY hace que no aparezcan las entradas a no ser que las pidamos?
+    //El Cascade hace que si se elimina una entrada se elimine su token?
+    @OneToOne(fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
+    //@JoinColumn(name = "token_valor", referencedColumnName = "valor")
+    @Transient
+    protected Token token;
+
     public Long getId() {
         return id;
     }
     public void setId(Long id) {
         this.id = id;
     }
+    @JsonIgnore
     public Espectaculo getEspectaculo() {
         return espectaculo;
     }
@@ -49,4 +61,7 @@ public abstract class Entrada {
     public void setPrecio(Long precio) {
         this.precio = precio;
     }
+    public void setToken(Token token){
+        this.token = token;
+    };
 }
