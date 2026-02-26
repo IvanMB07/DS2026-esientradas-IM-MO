@@ -1,20 +1,36 @@
 package edu.esi.ds.esientradas.http;
 
+import java.io.IOException;
 import java.util.Map;
 
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import edu.esi.ds.esientradas.services.UsuariosService;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/compras")
 public class ComprasController {
 
+    @Autowired
+    private UsuariosService usuariosService;
+
     @PostMapping("/comprar")
-    public void comprar(@RequestBody Map<String, Object> payload) {
-        Long idEntrada = ((Number) payload.get("idEntrada")).longValue();
-        String token = (String) payload.get("token");
+    public void comprar(HttpSession session, HttpServletResponse response, @RequestParam String userToken) throws IOException {
+        String sessionId = session.getId();
+        if (userToken == null || userToken.isEmpty()) {
+            response.sendRedirect("https://www.uclm.es/");
+            return;
+        }
+
+        this.usuariosService.checkToken(userToken);
 
     }
 
