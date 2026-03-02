@@ -28,8 +28,7 @@ public class ComprasService {
     public String comprar(Long idEntrada, String sessionId, String userToken) {
         String userName = this.usuariosService.checkToken(userToken);
 
-        Entrada entrada = this.entradaDao.findById(idEntrada)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
+        Entrada entrada = this.entradaDao.findById(idEntrada).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
 
         if (entrada.getEstado() != Estado.RESERVADA) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La entrada no está reservada");
