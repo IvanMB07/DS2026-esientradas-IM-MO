@@ -40,5 +40,9 @@ public class BusquedaService {
         return this.entradaDao.findByEspectaculoId(espectaculoId);
     }
 
+    public List<Espectaculo> getEspectaculos(Long idEscenario) {
+            return this.espectaculoDao.findByEscenarioId(idEscenario);
+    }
+
 
 }
