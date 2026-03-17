@@ -1,28 +1,57 @@
 <h1>Escenarios</h1>
 <button type="button" (click)="getEscenarios()">Ver escenarios</button>
 
-<!-- Con <ol> y <li> se muestran los escenarios obtenidos en forma de lista numerada, 
- con <ul> es sin numerar -->
-<!-- Con <span> podemos personalizar más las cosas ns xd. Por ejemplo podemos 
- hacer que al pulsar se muestren los espectaculos asociados al escenario, 
- cambiar los colores etc -->
-
 <ol>
     <li *ngFor="let escenario of escenarios">
         <span (click)="getEspectaculos(escenario)">{{ escenario.nombre }} - {{ escenario.descripcion }}</span>
         <ul *ngIf="escenario.espectaculos?.length > 0">
             <li *ngFor="let espectaculo of escenario.espectaculos">
-                <span (click)="getEntradas(espectaculo)">{{ espectaculo.artista }} - {{ espectaculo.fecha }} </span>
-                <span *ngIf="espectaculo.entradas?.length > 0"> | Entradas disponibles: {{ espectaculo.entradas.length }}</span>
+                <span (click)="getNumeroDeEntradas(espectaculo)">
+                    {{ espectaculo.artista }} - {{ espectaculo.fecha | date:'short' }}
+                </span>
+
+                <span *ngIf="espectaculo.resumen">
+                    | Libres: {{ espectaculo.resumen.libres }} de {{ espectaculo.resumen.total }}
+                </span>
+
                 <ul *ngIf="espectaculo.entradas?.length > 0">
                     <li *ngFor="let entrada of espectaculo.entradas">
-                        Estado: {{ entrada.estado }} |
-                        {{ entrada.zona != null ? ('Zona: ' + entrada.zona) : ('Fila: ' + entrada.fila + ' | Columna: '
-                        + entrada.columna + ' | Planta: ' + entrada.planta) }}
-                        | {{ entrada.precio }}€
+                        <span [style.color]="entrada.estado === 'DISPONIBLE' ? 'green' : 'gray'">
+                            {{ entrada.estado }}
+                        </span> |
+                        {{ entrada.zona != null ? ('Zona: ' + entrada.zona) : ('Fila: ' + entrada.fila + ' | Col: ' +
+                        entrada.columna) }}
+                        | {{ entrada.precio/100 | currency:'EUR' }}
                     </li>
                 </ul>
             </li>
         </ul>
     </li>
 </ol>
+
+<!-- Con <ol> y <li> se muestran los escenarios obtenidos en forma de lista numerada, 
+ con <ul> es sin numerar -->
+<!-- Con <span> podemos personalizar más las cosas ns xd. Por ejemplo podemos 
+ hacer que al pulsar se muestren los espectaculos asociados al escenario, 
+ cambiar los colores etc
+
+<ol>
+    <li *ngFor="let escenario of escenarios">
+        <span (click)="getEspectaculos(escenario)">{{ escenario.nombre }} - {{ escenario.descripcion }}</span>
+        <ul *ngIf="escenario.espectaculos?.length > 0">
+            <li *ngFor="let espectaculo of escenario.espectaculos">
+                <span (click)="getNumeroDeEntradas(espectaculo)">{{ espectaculo.artista }} - {{ espectaculo.fecha }} </span>
+                <span *ngIf="espectaculo.entradas?.length > 0"> | Entradas disponibles: {{ espectaculo.entradas.length }}</span>
+                <ul *ngIf="espectaculo.entradas?.length > 0">
+                    <li *ngFor="let entrada of espectaculo.entradas">
+                        Estado: {{ entrada.estado }} |
+                        {{ entrada.zona != null ? ('Zona: ' + entrada.zona) : ('Fila: ' + entrada.fila + ' | Columna: '
+                        + entrada.columna + ' | Planta: ' + entrada.planta) }}
+                        | {{ entrada.precio/100 }}€
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </li>
+</ol>
+-->

@@ -27,15 +27,15 @@ public class BusquedaService {
     @Autowired
     private EntradaDao entradaDao;
 
-    //@Autowired
-    //private EntradaDao entradaDao;
+    // @Autowired
+    // private EntradaDao entradaDao;
 
     public List<Escenario> getEscenarios() {
         return this.dao.findAll();
     }
 
     public List<Espectaculo> getEspectaculos(@RequestParam String artista) {
-       return this.espectaculoDao.findByArtista(artista);
+        return this.espectaculoDao.findByArtista(artista);
     }
 
     public List<Entrada> getEntradas(Long espectaculoId) {
@@ -43,7 +43,7 @@ public class BusquedaService {
     }
 
     public List<Espectaculo> getEspectaculos(Long idEscenario) {
-            return this.espectaculoDao.findByEscenarioId(idEscenario);
+        return this.espectaculoDao.findByEscenarioId(idEscenario);
     }
 
     public Integer getNumeroDeEntradas(Long espectaculoId) {
@@ -58,11 +58,10 @@ public class BusquedaService {
         Object o = this.entradaDao.getNumeroDeEntradasComoDto(espectaculoId);
         Object[] arr = (Object[]) o;
         DtoEntradas dto = new DtoEntradas(
-            ((Number) arr[0]).intValue(),
-            ((Number) arr[1]).intValue(),
-            ((Number) arr[2]).intValue(),
-            ((Number) arr[3]).intValue()
-        );
+                ((Number) arr[0]).intValue(),
+                ((Number) arr[1]).intValue(),
+                ((Number) arr[2]).intValue(),
+                ((Number) arr[3]).intValue());
         return dto;
     }
 

@@ -37,4 +37,26 @@ public class UserController {
         return result;
     }
 
+    @PostMapping("/register")
+    public String registrar(@RequestBody Map<String, String> credentials) {
+        JSONObject jsoCredentials = new JSONObject(credentials);
+        String email = jsoCredentials.optString("email");
+        String pwd1 = jsoCredentials.optString("pwd1");
+        String pwd2 = jsoCredentials.optString("pwd2");
+
+        if (email.isEmpty() || pwd1.isEmpty() || pwd2.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+        }
+
+        if (!pwd1.equals(pwd2)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Passwords do not match");
+        }
+
+        String result = this.service.registrar(email, pwd1);
+        if (result == null) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "User already exists");
+        }
+        return result;
+    }
+
 }

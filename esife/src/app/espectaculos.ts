@@ -5,7 +5,6 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class EspectaculosService {
-
   // El constructor inyecta la herramienta para hacer peticiones HTTP
   constructor(private http: HttpClient) { }
 
@@ -17,7 +16,15 @@ export class EspectaculosService {
     return this.http.get(`http://localhost:8080/busqueda/getEspectaculos/${escenario.id}`);
   }
 
-  getEntradas(espectaculo: any) {
-    return this.http.get(`http://localhost:8080/busqueda/getEntradas?espectaculoId=${espectaculo.id}`);
+  getNumeroDeEntradas(espectaculo: any) {
+    return this.http.get(`http://localhost:8080/busqueda/getNumeroDeEntradas?espectaculoId=${espectaculo.id}`);
+  }
+
+  getEntradasLibres(espectaculo: any) {
+    return this.http.get(`http://localhost:8080/busqueda/getEntradasLibres?espectaculoId=${espectaculo.id}`);
+  }
+
+  getNumeroDeEntradasComoDto(espectaculo: any) {
+    return this.http.get(`http://localhost:8080/busqueda/getNumeroDeEntradasComoDto?espectaculoId=${espectaculo.id}`);
   }
 }
