@@ -1,14 +1,26 @@
 package edu.esi.ds.esiusuarios.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "usuarios") // Nombre de la tabla en SQL Server
 public class User {
+    @Id
+    private String email; // Usaremos el email como llave única (ID)
     private String name;
-    private String password;
+    private String password; // Aquí guardaremos la contraseña YA ENCRIPTADA
     private String token;
 
-    public User(String name, String password, String token) {
+    // IMPORTANTE: Hibernate necesita un constructor vacío para funcionar
+    public User() {
+    }
+
+    public User(String name, String email, String password) {
         this.name = name;
+        this.email = email;
         this.password = password;
-        this.token = token;
     }
 
     public String getName() {

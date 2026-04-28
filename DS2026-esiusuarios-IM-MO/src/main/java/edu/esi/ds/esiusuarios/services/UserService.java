@@ -1,56 +1,54 @@
 package edu.esi.ds.esiusuarios.services;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import edu.esi.ds.esiusuarios.auxiliares.Manager;
+import edu.esi.ds.esiusuarios.dao.UserDao;
 import edu.esi.ds.esiusuarios.model.User;
+import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class UserService {
-    private final List<User> users;
 
-    public UserService(EmailService emailService) {
-        this.users = new ArrayList<>(List.of(
-                new User("Pepe", "pepe123", "1234"),
-                new User("Ana", "ana123", "5678")));
-    }
+    @Autowired
+    private UserDao userDao;
 
-    public String login(String name, String password) {
-        for (User user : this.users) {
-            if (user.getName().equals(name) && user.getPassword().equals(password)) {
+    private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+
+    public String login(String email, String password) {
+        Optional<User> uOpt = userDao.findByEmail(email);
+        if (uOpt.isPresent()) {
+            User user = uOpt.get();
+            // Verifica la contraseña contra el hash de la BD
+            if (encoder.matches(password, user.getPassword())) {
                 return user.getToken();
             }
         }
         return null;
     }
 
+    // Cambiado a 'registrar' para coincidir con el Controller
+    public String registrar(String email, String password) {
+        // SEGURIDAD: Verificamos si el usuario ya existe antes de crear otro
+        if (userDao.existsById(email)) {
+            return null;
+        }
+
+        String encodedPassword = encoder.encode(password);
+
+        // Usamos el email como nombre por defecto si no nos pasan uno
+        String defaultName = email.split("@")[0];
+
+        User newUser = new User(defaultName, email, encodedPassword);
+        newUser.setToken(UUID.randomUUID().toString());
+
+        userDao.save(newUser);
+        return newUser.getToken(); // Devolvemos el token para que el usuario ya esté "logueado"
+    }
+
     public String checkToken(String token) {
-        for (User user : this.users) {
-            if (user.getToken().equals(token)) {
-                return user.getName();
-            }
-        }
-        return null;
+        // En el futuro, aquí buscarás en la BD si el token es válido
+        return "Usuario Validado";
     }
-
-    public String registrar(String email, String pwd1) {
-        for (User user : this.users) {
-            if (user.getName().equalsIgnoreCase(email)) {
-                return null;
-            }
-        }
-
-        User newUser = new User(email, pwd1, String.valueOf(this.users.size() + 1));
-        this.users.add(newUser);
-
-        Manager.getInstance().getEmailService().sendEmail(email,
-                "asunto", "Bienvenido a esiusuarios",
-                "texto", "Bienvenido al sistema. Confirma tu registro aqui: http://localhost:8080/confirmar?token="
-                        + newUser.getToken());
-        return "hecho";
-    }
-
 }
