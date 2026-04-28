@@ -19,13 +19,21 @@ public class ExternalController {
 
     @GetMapping("/checkToken/{token}")
     public String checkToken(@PathVariable String token) {
-        if (token == null || token.isEmpty()) {
+        // 1. Validamos que el token no venga vacío
+        if (token == null || token.trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token is required");
         }
-        String userName = this.service.checkToken(token);
-        if (userName == null) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+
+        // 2. Llamamos al servicio que ahora busca en SQL Server
+        String email = this.service.checkToken(token);
+
+        // 3. Si el servicio devuelve null, el token no existe o ha expirado
+        if (email == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
         }
-        return userName;
+
+        // 4. Devolvemos el email del usuario (que sirve como identificador para
+        // esientradas)
+        return email;
     }
 }

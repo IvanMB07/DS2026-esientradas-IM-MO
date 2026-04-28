@@ -8,11 +8,16 @@ import edu.esi.ds.esiusuarios.model.User;
 import java.util.Optional;
 import java.util.UUID;
 
+import java.time.LocalDateTime;
+
 @Service
 public class UserService {
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private EmailService emailService;
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
@@ -48,7 +53,58 @@ public class UserService {
     }
 
     public String checkToken(String token) {
-        // En el futuro, aquí buscarás en la BD si el token es válido
-        return "Usuario Validado";
+        // Buscamos si existe algún usuario con ese token de sesión activo
+        Optional<User> uOpt = userDao.findByToken(token);
+        if (uOpt.isPresent()) {
+            return uOpt.get().getEmail(); // Devolvemos el email del dueño del token
+        }
+        return null;
+    }
+
+    public void solicitarRecuperacion(String email) {
+        Optional<User> uOpt = userDao.findByEmail(email);
+        if (uOpt.isPresent()) {
+            User user = uOpt.get();
+
+            // 1. Generamos un token único de recuperación
+            String token = UUID.randomUUID().toString();
+            user.setPwdRecoveryToken(token);
+
+            // 2. Ponemos fecha de caducidad (ej: 15 minutos desde ahora)
+            user.setPwdRecoveryTokenExpiry(LocalDateTime.now().plusMinutes(15));
+
+            userDao.save(user);
+
+            // 3. Enviamos el "email" (se verá en la consola de VS Code)
+            emailService.sendEmail(email,
+                    "Asunto", "Recuperación de contraseña",
+                    "Cuerpo", "Tu token de recuperación es: " + token + ". Caduca en 15 minutos.");
+        }
+    }
+
+    public boolean resetearPassword(String token, String newPassword) {
+        Optional<User> uOpt = userDao.findByPwdRecoveryToken(token);
+
+        if (uOpt.isPresent()) {
+            User user = uOpt.get();
+
+            // SEGURIDAD: Comprobamos si el token ha caducado
+            if (user.getPwdRecoveryTokenExpiry().isAfter(LocalDateTime.now())) {
+                // Token válido y a tiempo: cambiamos la clave (encriptándola)
+                user.setPassword(encoder.encode(newPassword));
+
+                // Limpiamos el token para que no se pueda volver a usar
+                user.setPwdRecoveryToken(null);
+                user.setPwdRecoveryTokenExpiry(null);
+
+                userDao.save(user);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void cancelarCuenta(String email) {
+        userDao.deleteById(email);
     }
 }
