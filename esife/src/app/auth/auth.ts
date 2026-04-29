@@ -27,7 +27,7 @@ export class AuthComponent {
 
   private redirigirPostLogin() {
     // Miramos si el usuario dejó un carrito a medias
-    const compraToken = localStorage.getItem('compraToken') || sessionStorage.getItem('compraToken');
+    const compraToken = sessionStorage.getItem('compraToken');
 
     if (compraToken && compraToken !== 'null' && compraToken !== 'undefined' && compraToken !== '') {
       // Si hay entradas reservadas, le mandamos directo a la caja[cite: 2]

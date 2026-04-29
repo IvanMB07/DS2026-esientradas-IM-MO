@@ -78,8 +78,20 @@ public class ReservasService {
         this.entradaDao.updateEstado(idEntrada, Estado.DISPONIBLE);
     }
 
-    public Token getResumenCompra(String tokenValor) {
-        return this.tokenDao.findById(tokenValor).orElseThrow(
+    public Token getResumenCompra(String tokenValor, String userToken) {
+        Token token = this.tokenDao.findById(tokenValor).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sesión expirada"));
+
+        // Si hay userToken y el token no está vinculado a un usuario, vincularlo
+        if (userToken != null && !userToken.isEmpty() && !userToken.equals("null")
+                && !userToken.equals("undefined") && token.getEmailUsuario() == null) {
+            String emailActual = usuariosService.checkToken(userToken);
+            if (emailActual != null) {
+                token.setEmailUsuario(emailActual);
+                this.tokenDao.save(token);
+            }
+        }
+
+        return token;
     }
 }

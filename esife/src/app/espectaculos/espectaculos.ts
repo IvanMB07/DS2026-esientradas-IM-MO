@@ -24,30 +24,36 @@ export class Espectaculos implements OnInit {
   ) { }
 
   private getCompraToken(): string | null {
-    const t = localStorage.getItem('compraToken') || sessionStorage.getItem('compraToken');
+    const t = sessionStorage.getItem('compraToken');
     return (t === 'null' || t === 'undefined' || t === '') ? null : t;
   }
 
   private saveCompraToken(token: string) {
-    localStorage.setItem('compraToken', token);
     sessionStorage.setItem('compraToken', token);
   }
 
   private getCarrito(): any[] {
-    const carritoGuardado = localStorage.getItem('carrito') || sessionStorage.getItem('carrito');
+    const carritoGuardado = sessionStorage.getItem('carrito');
     return carritoGuardado ? JSON.parse(carritoGuardado) : [];
   }
 
   private saveCarrito(carrito: any[]) {
-    localStorage.setItem('carrito', JSON.stringify(carrito));
     sessionStorage.setItem('carrito', JSON.stringify(carrito));
   }
 
   ngOnInit() {
     this.entradasSeleccionadas = this.getCarrito();
-    const token = this.getCompraToken();
-    if (token) {
-      this.http.get<any>(`http://localhost:8080/reservas/resumen?compraToken=${token}`)
+    const compraToken = this.getCompraToken();
+    const userToken = this.auth.getToken();
+
+    if (compraToken) {
+      // Construir URL con ambos tokens
+      let url = `http://localhost:8080/reservas/resumen?compraToken=${compraToken}`;
+      if (userToken) {
+        url += `&userToken=${userToken}`;
+      }
+
+      this.http.get<any>(url)
         .subscribe({
           next: (res) => {
             const entradasBackend = res.entradas || [];

@@ -32,7 +32,8 @@ public class ReservasController {
     }
 
     @GetMapping("/resumen")
-    public Object getResumen(@RequestParam String compraToken) {
-        return this.service.getResumenCompra(compraToken);
+    public Object getResumen(@RequestParam String compraToken,
+            @RequestParam(required = false) String userToken) {
+        return this.service.getResumenCompra(compraToken, userToken);
     }
 }

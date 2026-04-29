@@ -3,6 +3,7 @@ import { Pagos } from '../pagos';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
+import { Auth } from '../auth';
 
 declare let Stripe: any;
 
@@ -22,14 +23,14 @@ export class Compra implements OnInit {
   stripe = Stripe('pk_test_51T92li3gOJNjp26dAGHSKdNSIOYItMdsHRX9H7faPz7lA4aMItqNcJcdEEVtvnRhRuvL2LyH3iYDyctxx89hXwXF00UFwKEYL2'); // Aquí va tu clave pública de Stripe
   card: any;
 
-  constructor(private service: Pagos, private http: HttpClient) { }
+  constructor(private service: Pagos, private http: HttpClient, private auth: Auth) { }
 
   private getCompraToken(): string | null {
-    return localStorage.getItem('compraToken') || sessionStorage.getItem('compraToken');
+    return sessionStorage.getItem('compraToken');
   }
 
   private getCarrito(): any[] {
-    const carritoGuardado = localStorage.getItem('carrito') || sessionStorage.getItem('carrito');
+    const carritoGuardado = sessionStorage.getItem('carrito');
     return carritoGuardado ? JSON.parse(carritoGuardado) : [];
   }
 
@@ -38,16 +39,23 @@ export class Compra implements OnInit {
   }
 
   cargarResumen() {
-    const token = this.getCompraToken();
+    const compraToken = this.getCompraToken();
+    const userToken = this.auth.getToken();
     const carrito = this.getCarrito();
 
-    if (!token) {
+    if (!compraToken) {
       this.entradas = carrito;
       this.total = this.entradas.reduce((acc, e) => acc + (e.precio / 100), 0);
       return;
     }
 
-    this.http.get<any>(`http://localhost:8080/reservas/resumen?compraToken=${token}`).subscribe({
+    // Construir URL con ambos tokens
+    let url = `http://localhost:8080/reservas/resumen?compraToken=${compraToken}`;
+    if (userToken) {
+      url += `&userToken=${userToken}`;
+    }
+
+    this.http.get<any>(url).subscribe({
       next: (res) => {
         // Si el backend devuelve el objeto Token, las entradas están en res.entradas
         // Si devuelve directamente la lista, se queda como res
