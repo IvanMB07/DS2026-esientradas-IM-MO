@@ -1,21 +1,9 @@
 package edu.esi.ds.esientradas.http;
 
-import java.util.List;
 import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import edu.esi.ds.esientradas.model.Entrada;
+import org.springframework.web.bind.annotation.*;
 import edu.esi.ds.esientradas.services.ReservasService;
-import jakarta.servlet.http.HttpSession;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -26,19 +14,21 @@ public class ReservasController {
     private ReservasService service;
 
     @PostMapping("/seleccionar")
-    public String seleccionar(@RequestBody Map<String, String> payload) {
-        Long idEntrada = Long.parseLong(payload.get("idEntrada"));
-        String compraToken = payload.get("compraToken");
+    public String seleccionar(@RequestBody Map<String, Object> payload) {
+        Long idEntrada = Long.parseLong(payload.get("idEntrada").toString());
+        String cToken = payload.get("compraToken") != null ? payload.get("compraToken").toString() : null;
+        String uToken = payload.get("userToken") != null ? payload.get("userToken").toString() : null;
 
-        return this.service.seleccionarEntrada(idEntrada, compraToken);
+        return this.service.seleccionarEntrada(idEntrada, cToken, uToken);
     }
 
     @PostMapping("/cancelar")
-    public void cancelar(@RequestBody Map<String, String> payload) {
-        Long idEntrada = Long.parseLong(payload.get("idEntrada"));
-        String compraToken = payload.get("compraToken");
+    public void cancelar(@RequestBody Map<String, Object> payload) {
+        Long idEntrada = Long.parseLong(payload.get("idEntrada").toString());
+        String cToken = payload.get("compraToken").toString();
+        String uToken = payload.get("userToken") != null ? payload.get("userToken").toString() : null;
 
-        this.service.cancelarEntrada(idEntrada, compraToken);
+        this.service.cancelarEntrada(idEntrada, cToken, uToken);
     }
 
     @GetMapping("/resumen")

@@ -1,15 +1,15 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Auth } from '../auth'; // Importación corregida
+import { Auth } from '../auth';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
   imports: [FormsModule, CommonModule],
-  templateUrl: './auth.html', // Nombre corregido a 'auth.html'
-  styleUrl: './auth.css'      // Nombre corregido a 'auth.css'
+  templateUrl: './auth.html',
+  styleUrl: './auth.css'
 })
 export class AuthComponent {
   email = '';
@@ -18,11 +18,24 @@ export class AuthComponent {
   isLoginMode = true;
   mensaje = '';
 
-  constructor(private auth: Auth, private router: Router) { } // Inyección corregida
+  constructor(private auth: Auth, private router: Router) { }
 
   toggleMode() {
     this.isLoginMode = !this.isLoginMode;
     this.mensaje = '';
+  }
+
+  private redirigirPostLogin() {
+    // Miramos si el usuario dejó un carrito a medias
+    const compraToken = localStorage.getItem('compraToken') || sessionStorage.getItem('compraToken');
+
+    if (compraToken && compraToken !== 'null' && compraToken !== 'undefined' && compraToken !== '') {
+      // Si hay entradas reservadas, le mandamos directo a la caja[cite: 2]
+      this.router.navigate(['/comprar']);
+    } else {
+      // Si no, a la pantalla principal
+      this.router.navigate(['/espectaculos']);
+    }
   }
 
   onSubmit() {
@@ -30,8 +43,10 @@ export class AuthComponent {
       this.auth.login(this.email, this.pwd).subscribe({
         next: (token) => {
           this.auth.saveToken(token);
-          this.mensaje = '¡Bienvenido! Redirigiendo...';
-          setTimeout(() => this.router.navigate(['/espectaculos']), 1500);
+          this.mensaje = '¡Bienvenido! Accediendo a su pedido...';
+
+          // Retardo para que el usuario vea el mensaje de bienvenida
+          setTimeout(() => this.redirigirPostLogin(), 1500);
         },
         error: () => this.mensaje = 'Error: Email o contraseña incorrectos'
       });
@@ -40,7 +55,8 @@ export class AuthComponent {
         next: (token) => {
           this.auth.saveToken(token);
           this.mensaje = 'Cuenta creada con éxito. Redirigiendo...';
-          setTimeout(() => this.router.navigate(['/espectaculos']), 1500);
+
+          setTimeout(() => this.redirigirPostLogin(), 1500);
         },
         error: (err) => {
           this.mensaje = err.status === 409 ? 'El usuario ya existe' : 'Error en el registro';

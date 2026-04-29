@@ -18,6 +18,7 @@ public class Token {
     private String valor;
     private Long hora;
     private String sessionId;
+    private String emailUsuario;
 
     @OneToMany(fetch = FetchType.EAGER) // EAGER para que cargue las entradas al recuperar el token
     @JoinColumn(name = "token_valor")
@@ -51,6 +52,14 @@ public class Token {
 
     public void setSessionId(String sessionId) {
         this.sessionId = sessionId;
+    }
+
+    public String getEmailUsuario() {
+        return emailUsuario;
+    }
+
+    public void setEmailUsuario(String emailUsuario) {
+        this.emailUsuario = emailUsuario;
     }
 
     public List<Entrada> getEntradas() {

@@ -8,19 +8,19 @@ export const routes: Routes = [
     // Pantalla de Login/Registro
     { path: "auth", component: AuthComponent },
 
-    // Pantalla principal de eventos (A la que intentas redirigir)
+    // Pantalla principal (ahora accesible sin login para ver y elegir)
     { path: "espectaculos", component: Espectaculos },
 
-    // Solo se puede entrar a comprar si el authGuard devuelve true
+    // El proceso de pago SIEMPRE requiere estar logueado[cite: 2]
     {
         path: "comprar",
         component: Compra,
         canActivate: [authGuard]
     },
 
-    // Si entran a la raíz, que les mande al login
-    { path: "", redirectTo: "/auth", pathMatch: "full" },
+    // Por defecto mandamos a la cartelera para que el usuario vea qué hay
+    { path: "", redirectTo: "/espectaculos", pathMatch: "full" },
 
-    // Si escriben cualquier cosa rara, que les mande también al login
-    { path: "**", redirectTo: "/auth" }
+    // Cualquier otra cosa, a la cartelera
+    { path: "**", redirectTo: "/espectaculos" }
 ];
