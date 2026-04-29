@@ -1,7 +1,8 @@
 <div class="auth-container">
-    <h2>{{ isLoginMode ? 'Iniciar Sesión' : 'Crear Cuenta' }}</h2>
+    <h2>{{ isLoginMode ? 'Iniciar sesión' : 'Crear cuenta' }}</h2>
+    <p class="auth-subtitle">Gestiona tu acceso en unos segundos.</p>
 
-    <form (ngSubmit)="onSubmit()">
+    <form (ngSubmit)="onSubmit()" class="auth-form">
         <input type="email" name="email" [(ngModel)]="email" placeholder="Email" required>
 
         <input type="password" name="pwd" [(ngModel)]="pwd" placeholder="Contraseña" required>
@@ -12,9 +13,9 @@
         <button type="submit">{{ isLoginMode ? 'Entrar' : 'Registrarse' }}</button>
     </form>
 
-    <p *ngIf="mensaje">{{ mensaje }}</p>
+    <p *ngIf="mensaje" class="auth-message">{{ mensaje }}</p>
 
-    <a (click)="toggleMode()">
+    <a (click)="toggleMode()" class="auth-toggle" role="button" tabindex="0">
         {{ isLoginMode ? '¿No tienes cuenta? Regístrate aquí' : '¿Ya tienes cuenta? Entra aquí' }}
     </a>
 </div>

@@ -1,0 +1,35 @@
+.app-shell {
+    min-height: 100vh;
+    padding: 2rem 1rem 2.5rem;
+}
+
+.app-header,
+.app-content {
+    width: min(960px, 100%);
+    margin: 0 auto;
+}
+
+.app-header {
+    margin-bottom: 1rem;
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: clamp(1.5rem, 2.1vw, 2rem);
+    letter-spacing: 0.08em;
+}
+
+.app-header p {
+    margin: 0.35rem 0 0;
+    font-size: 0.96rem;
+}
+
+@media (max-width: 600px) {
+    .app-shell {
+        padding-top: 1.25rem;
+    }
+
+    .app-header {
+        margin-bottom: 0.75rem;
+    }
+}

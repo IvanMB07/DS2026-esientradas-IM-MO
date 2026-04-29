@@ -1,33 +1,39 @@
-<h1>Escenarios</h1>
-<button type="button" (click)="getEscenarios()">Ver escenarios</button>
+<section class="espectaculos-view">
+    <div class="espectaculos-header">
+        <h1>Escenarios</h1>
+        <button type="button" (click)="getEscenarios()">Ver escenarios</button>
+    </div>
 
-<ol>
-    <li *ngFor="let escenario of escenarios">
-        <span (click)="getEspectaculos(escenario)">{{ escenario.nombre }} - {{ escenario.descripcion }}</span>
-        <ul *ngIf="escenario.espectaculos?.length > 0">
-            <li *ngFor="let espectaculo of escenario.espectaculos">
-                <span (click)="getNumeroDeEntradas(espectaculo)">
-                    {{ espectaculo.artista }} - {{ espectaculo.fecha | date:'short' }}
-                </span>
+    <ol class="escenarios-list">
+        <li *ngFor="let escenario of escenarios" class="escenario-item">
+            <span class="interactive" (click)="getEspectaculos(escenario)">{{ escenario.nombre }} - {{
+                escenario.descripcion }}</span>
+            <ul *ngIf="escenario.espectaculos?.length > 0" class="espectaculos-list">
+                <li *ngFor="let espectaculo of escenario.espectaculos" class="espectaculo-item">
+                    <span class="interactive" (click)="getNumeroDeEntradas(espectaculo)">
+                        {{ espectaculo.artista }} - {{ espectaculo.fecha | date:'short' }}
+                    </span>
 
-                <span *ngIf="espectaculo.resumen">
-                    | Libres: {{ espectaculo.resumen.libres }} de {{ espectaculo.resumen.total }}
-                </span>
+                    <span *ngIf="espectaculo.resumen" class="resumen">
+                        | Libres: {{ espectaculo.resumen.libres }} de {{ espectaculo.resumen.total }}
+                    </span>
 
-                <ul *ngIf="espectaculo.entradas?.length > 0">
-                    <li *ngFor="let entrada of espectaculo.entradas">
-                        <span [style.color]="entrada.estado === 'DISPONIBLE' ? 'green' : 'gray'">
-                            {{ entrada.estado }}
-                        </span> |
-                        {{ entrada.zona != null ? ('Zona: ' + entrada.zona) : ('Fila: ' + entrada.fila + ' | Col: ' +
-                        entrada.columna) }}
-                        | {{ entrada.precio/100 | currency:'EUR' }}
-                    </li>
-                </ul>
-            </li>
-        </ul>
-    </li>
-</ol>
+                    <ul *ngIf="espectaculo.entradas?.length > 0" class="entradas-list">
+                        <li *ngFor="let entrada of espectaculo.entradas" class="entrada-item">
+                            <span [style.color]="entrada.estado === 'DISPONIBLE' ? 'green' : 'gray'">
+                                {{ entrada.estado }}
+                            </span> |
+                            {{ entrada.zona != null ? ('Zona: ' + entrada.zona) : ('Fila: ' + entrada.fila + ' | Col: '
+                            +
+                            entrada.columna) }}
+                            | {{ entrada.precio/100 | currency:'EUR' }}
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </li>
+    </ol>
+</section>
 
 <!-- Con <ol> y <li> se muestran los escenarios obtenidos en forma de lista numerada, 
  con <ul> es sin numerar -->

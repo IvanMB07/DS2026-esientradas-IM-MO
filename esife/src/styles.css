@@ -1,1 +1,82 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+    --bg: #f4f6f8;
+    --surface: #ffffff;
+    --surface-soft: #f8fafc;
+    --text: #0f172a;
+    --muted: #64748b;
+    --primary: #0f766e;
+    --primary-hover: #0d6b64;
+    --border: #e2e8f0;
+    --ok: #15803d;
+    --off: #64748b;
+    --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    font-family: "Manrope", sans-serif;
+    color: var(--text);
+    background:
+        radial-gradient(circle at 8% 8%, rgba(15, 118, 110, 0.14), transparent 42%),
+        radial-gradient(circle at 92% 95%, rgba(30, 64, 175, 0.12), transparent 38%),
+        var(--bg);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    margin-top: 0;
+    line-height: 1.15;
+}
+
+p {
+    color: var(--muted);
+}
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    border: 0;
+    border-radius: 12px;
+    padding: 0.62rem 0.95rem;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.16s ease, filter 0.16s ease;
+}
+
+button:hover {
+    filter: brightness(0.98);
+    transform: translateY(-1px);
+    background: var(--primary-hover);
+}
+
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--primary) 65%, #fff 35%);
+    outline-offset: 2px;
+}
+
+input {
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.65rem 0.75rem;
+}
