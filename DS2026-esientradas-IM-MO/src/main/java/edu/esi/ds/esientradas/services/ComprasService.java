@@ -25,21 +25,30 @@ public class ComprasService {
     private UsuariosService usuariosService;
 
     @Transactional
-    public String comprar(Long idEntrada, String sessionId, String userToken) {
+    public String comprar(Long idEntrada, String compraToken, String userToken) {
+        // 1. Verificar identidad del usuario (Token 1234 del diagrama)
         String userName = this.usuariosService.checkToken(userToken);
 
-        Entrada entrada = this.entradaDao.findById(idEntrada).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
+        // 2. Buscar la entrada
+        Entrada entrada = this.entradaDao.findById(idEntrada)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
 
-        if (entrada.getEstado() != Estado.RESERVADA) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La entrada no está reservada");
+        // 3. Buscar el token de compra (Token abcd del diagrama)
+        Token tokenReserva = this.tokenDao.findById(compraToken)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN, "Token de compra no válido"));
+
+        // 4. [CRÍTICO] Validar que la entrada pertenece a ESTE token
+        // Esto sustituye al antiguo método del DAO
+        if (!tokenReserva.getEntradas().contains(entrada)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Esta entrada no forma parte de tu reserva");
         }
 
-        Token tokenReserva = this.tokenDao.findByEntradaIdAndSessionId(idEntrada, sessionId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN,
-                        "La reserva no pertenece a esta sesión"));
-
+        // 5. Finalizar proceso (Paso 33 del diagrama)
         this.entradaDao.updateEstado(idEntrada, Estado.VENDIDA);
-        this.tokenDao.delete(tokenReserva);
+
+        // Si quieres que el token desaparezca solo cuando se paguen TODAS,
+        // podrías borrarlo aquí o al final del bucle en el controlador
+        // this.tokenDao.delete(tokenReserva);
 
         return userName;
     }

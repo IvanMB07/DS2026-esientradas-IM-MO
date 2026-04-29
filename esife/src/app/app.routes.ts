@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
 import { Compra } from './compra/compra';
 import { AuthComponent } from './auth/auth';
-import { Espectaculos } from './espectaculos/espectaculos'; // Asegúrate de que esta ruta sea correcta
+import { Espectaculos } from './espectaculos/espectaculos';
+import { authGuard } from './auth.guard';
 
 export const routes: Routes = [
     // Pantalla de Login/Registro
@@ -10,8 +11,12 @@ export const routes: Routes = [
     // Pantalla principal de eventos (A la que intentas redirigir)
     { path: "espectaculos", component: Espectaculos },
 
-    // Pantalla de compra (añadimos el :id para saber qué entrada compramos)
-    { path: "comprar/:id", component: Compra },
+    // Solo se puede entrar a comprar si el authGuard devuelve true
+    {
+        path: "comprar",
+        component: Compra,
+        canActivate: [authGuard]
+    },
 
     // Si entran a la raíz, que les mande al login
     { path: "", redirectTo: "/auth", pathMatch: "full" },

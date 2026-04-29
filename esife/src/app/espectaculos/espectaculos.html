@@ -1,63 +1,52 @@
 <section class="espectaculos-view">
     <div class="espectaculos-header">
-        <h1>Escenarios</h1>
-        <button type="button" (click)="getEscenarios()">Ver escenarios</button>
+        <h1>Cartelera de Espectáculos</h1>
+        <button type="button" (click)="getEscenarios()">
+            {{ escenarios.length > 0 ? 'Cerrar' : 'Ver escenarios' }}
+        </button>
     </div>
 
     <ol class="escenarios-list">
         <li *ngFor="let escenario of escenarios" class="escenario-item">
-            <span class="interactive" (click)="getEspectaculos(escenario)">{{ escenario.nombre }} - {{
-                escenario.descripcion }}</span>
+            <h3 class="interactive" (click)="getEspectaculos(escenario)">{{ escenario.nombre }}</h3>
+
             <ul *ngIf="escenario.espectaculos?.length > 0" class="espectaculos-list">
                 <li *ngFor="let espectaculo of escenario.espectaculos" class="espectaculo-item">
-                    <span class="interactive" (click)="getNumeroDeEntradas(espectaculo)">
-                        {{ espectaculo.artista }} - {{ espectaculo.fecha | date:'short' }}
-                    </span>
+                    <div class="info-espectaculo interactive" (click)="getNumeroDeEntradas(espectaculo)">
+                        <strong>{{ espectaculo.artista }}</strong> - {{ espectaculo.fecha | date:'medium' }}
+                        <span *ngIf="espectaculo.resumen" class="resumen">
+                            (Disponibles: {{ espectaculo.resumen.libres }}/{{ espectaculo.resumen.total }})
+                        </span>
+                    </div>
 
-                    <span *ngIf="espectaculo.resumen" class="resumen">
-                        | Libres: {{ espectaculo.resumen.libres }} de {{ espectaculo.resumen.total }}
-                    </span>
+                    <div *ngIf="espectaculo.entradasAgrupadas" class="zonas-container">
+                        <div *ngFor="let zona of espectaculo.entradasAgrupadas | keyvalue" class="zona-bloque">
+                            <h4>{{ zona.key }}</h4>
+                            <div class="butacas-grid">
+                                <div *ngFor="let entrada of zona.value" class="entrada-item" [ngClass]="{
+                                        'seleccionada': estaSeleccionada(entrada), 
+                                        'ocupada': entrada.estado === 'RESERVADA' && !estaSeleccionada(entrada),
+                                        'disponible': entrada.estado === 'DISPONIBLE'
+                                    }" (click)="toggleSeleccion(espectaculo, entrada)">
 
-                    <ul *ngIf="espectaculo.entradas?.length > 0" class="entradas-list">
-                        <li *ngFor="let entrada of espectaculo.entradas" class="entrada-item">
-                            <span [style.color]="entrada.estado === 'DISPONIBLE' ? 'green' : 'gray'">
-                                {{ entrada.estado }}
-                            </span> |
-                            {{ entrada.zona != null ? ('Zona: ' + entrada.zona) : ('Fila: ' + entrada.fila + ' | Col: '
-                            +
-                            entrada.columna) }}
-                            | {{ entrada.precio/100 | currency:'EUR' }}
-                        </li>
-                    </ul>
+                                    <span class="label">
+                                        {{ entrada.zona ? 'Ticket' : 'F:'+entrada.fila+' P:'+entrada.columna }}
+                                    </span>
+                                    <span class="precio">{{ entrada.precio/100 | currency:'EUR' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </li>
             </ul>
         </li>
     </ol>
+
+    <div *ngIf="entradasSeleccionadas.length > 0" class="carrito-panel">
+        <div class="resumen-compra">
+            <span>Has seleccionado <strong>{{ entradasSeleccionadas.length }}</strong> entradas</span>
+            <span>Total: <strong>{{ getTotal() | currency:'EUR' }}</strong></span>
+        </div>
+        <button class="btn-comprar" (click)="irAComprar()">Continuar a la Compra</button>
+    </div>
 </section>
-
-<!-- Con <ol> y <li> se muestran los escenarios obtenidos en forma de lista numerada, 
- con <ul> es sin numerar -->
-<!-- Con <span> podemos personalizar más las cosas ns xd. Por ejemplo podemos 
- hacer que al pulsar se muestren los espectaculos asociados al escenario, 
- cambiar los colores etc
-
-<ol>
-    <li *ngFor="let escenario of escenarios">
-        <span (click)="getEspectaculos(escenario)">{{ escenario.nombre }} - {{ escenario.descripcion }}</span>
-        <ul *ngIf="escenario.espectaculos?.length > 0">
-            <li *ngFor="let espectaculo of escenario.espectaculos">
-                <span (click)="getNumeroDeEntradas(espectaculo)">{{ espectaculo.artista }} - {{ espectaculo.fecha }} </span>
-                <span *ngIf="espectaculo.entradas?.length > 0"> | Entradas disponibles: {{ espectaculo.entradas.length }}</span>
-                <ul *ngIf="espectaculo.entradas?.length > 0">
-                    <li *ngFor="let entrada of espectaculo.entradas">
-                        Estado: {{ entrada.estado }} |
-                        {{ entrada.zona != null ? ('Zona: ' + entrada.zona) : ('Fila: ' + entrada.fila + ' | Columna: '
-                        + entrada.columna + ' | Planta: ' + entrada.planta) }}
-                        | {{ entrada.precio/100 }}€
-                    </li>
-                </ul>
-            </li>
-        </ul>
-    </li>
-</ol>
--->

@@ -1,24 +1,35 @@
 <section class="compra-view">
-    <h1>Compra</h1>
+    <h1>Finalizar Compra</h1>
 
     <div class="compra-card">
-        <label for="importe">Importe</label>
-        <div class="compra-controls">
-            <input id="importe" type="number" [(ngModel)]="importe">
-            <button type="button" (click)="irAlPago()">Ir al pago</button>
+        <div class="resumen-lista">
+            <h3>Tus Entradas</h3>
+            <ul>
+                <li *ngFor="let e of entradas" class="item-entrada">
+                    <div class="info-item">
+                        <strong>{{ e.espectaculo?.artista || e.artista || e.espectaculo?.nombre || e.nombre ||
+                            'Espectáculo' }}</strong>
+                        <span> - {{ (e.espectaculo?.fecha || e.fecha) | date:'medium' }}</span>
+                    </div>
+
+                    <div class="detalle-asiento">
+                        <span>
+                            {{ e.zona ? 'Ticket ' + e.zona : 'Fila: ' + e.fila + ' - Col: ' + (e.columna || e.numero) }}
+                        </span>
+                        <strong class="precio-unidad">{{ e.precio/100 | currency:'EUR' }}</strong>
+                    </div>
+                </li>
+            </ul>
         </div>
 
-        <form id="payment-form" style="display:none">
-            <div id="card-element"></div>
-            <button id="submit">
-                <div class="spinner hidden" id="spinner"></div>
-                <span id="button-text">Pay now</span>
-            </button>
-            <p id="card-error" role="alert"></p>
-            <p class="result-message hidden">
-                Payment succeeded, see the result in your
-                <a href="" target="_blank">Stripe dashboard.</a> Refresh the page to pay again.
-            </p>
-        </form>
+        <div class="total-pago">
+            <span>Total a pagar:</span>
+            <span class="total-amount">{{ total | currency:'EUR' }}</span>
+        </div>
+
+        <button type="button" class="btn-confirmar" (click)="irAlPago()" [disabled]="total <= 0">
+            Confirmar e ir al pago
+        </button>
+
     </div>
 </section>

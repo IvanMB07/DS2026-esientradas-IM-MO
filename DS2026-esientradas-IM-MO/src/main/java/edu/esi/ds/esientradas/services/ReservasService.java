@@ -14,33 +14,52 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class ReservasService {
-
     @Autowired
-    private EntradaDao dao;
-
+    private EntradaDao entradaDao;
     @Autowired
     private TokenDao tokenDao;
 
     @Transactional
-    public Long reservar(Long idEntrada, String sessionId){
-        Entrada entrada = this.dao.findById(idEntrada).orElseThrow(
-            () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
-
-        if(entrada.getEstado() != Estado.DISPONIBLE){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Entrada no disponible");
+    public String seleccionarEntrada(Long idEntrada, String compraToken) {
+        Token token;
+        if (compraToken == null || compraToken.isEmpty() || compraToken.equals("null")) {
+            token = new Token();
+        } else {
+            token = this.tokenDao.findById(compraToken).orElseThrow(
+                    () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Proceso de compra no encontrado"));
         }
-        //entrada.setEstado(Estado.RESERVADA);
-        //this.dao.save(entrada);
-        
-        //entrada.setToken(new Token());
-        
-        Token token = new Token();
-        token.setEntrada(entrada);
-        token.setSessionId(sessionId);
-        this.tokenDao.save(token);
 
-        this.dao.updateEstado(idEntrada, Estado.RESERVADA);
-        return entrada.getPrecio();
+        Entrada entrada = this.entradaDao.findById(idEntrada).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
+
+        if (entrada.getEstado() != Estado.DISPONIBLE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La entrada ya no está disponible");
+        }
+
+        // AGREGAR A LA LISTA
+        token.addEntrada(entrada);
+        this.tokenDao.save(token);
+        this.entradaDao.updateEstado(idEntrada, Estado.RESERVADA);
+
+        return token.getValor();
     }
 
+    @Transactional
+    public void cancelarEntrada(Long idEntrada, String compraToken) {
+        Token token = this.tokenDao.findById(compraToken).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token no válido"));
+
+        Entrada entrada = this.entradaDao.findById(idEntrada).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
+
+        // Quitamos la entrada de la lista del token y liberamos el estado
+        token.getEntradas().removeIf(e -> e.getId().equals(idEntrada));
+        this.tokenDao.save(token);
+        this.entradaDao.updateEstado(idEntrada, Estado.DISPONIBLE);
+    }
+
+    public Token getResumenCompra(String tokenValor) {
+        return this.tokenDao.findById(tokenValor).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sesión de compra expirada"));
+    }
 }

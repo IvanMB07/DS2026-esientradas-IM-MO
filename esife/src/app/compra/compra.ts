@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Pagos } from '../pagos';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 
 declare let Stripe: any;
 
@@ -12,61 +13,140 @@ declare let Stripe: any;
   templateUrl: './compra.html',
   styleUrl: './compra.css',
 })
-export class Compra {
+export class Compra implements OnInit {
 
-  importe: number = 20;
-  clientSecret?: string; // La ? quiere decir que puede tener valor o no (undefined)
+  entradas: any[] = [];
+  total: number = 0;
+  clientSecret?: string;
+
   stripe = Stripe('pk_test_51T92li3gOJNjp26dAGHSKdNSIOYItMdsHRX9H7faPz7lA4aMItqNcJcdEEVtvnRhRuvL2LyH3iYDyctxx89hXwXF00UFwKEYL2'); // Aquí va tu clave pública de Stripe
+  card: any;
 
-  constructor(private service: Pagos){}
+  constructor(private service: Pagos, private http: HttpClient) { }
 
-  irAlPago() {
-    let info = {
-      centimos: Math.floor(this.importe.valueOf() * 100)
+  private getCompraToken(): string | null {
+    return localStorage.getItem('compraToken') || sessionStorage.getItem('compraToken');
+  }
+
+  private getCarrito(): any[] {
+    const carritoGuardado = localStorage.getItem('carrito') || sessionStorage.getItem('carrito');
+    return carritoGuardado ? JSON.parse(carritoGuardado) : [];
+  }
+
+  ngOnInit() {
+    this.cargarResumen();
+  }
+
+  cargarResumen() {
+    const token = this.getCompraToken();
+    const carrito = this.getCarrito();
+
+    if (!token) {
+      this.entradas = carrito;
+      this.total = this.entradas.reduce((acc, e) => acc + (e.precio / 100), 0);
+      return;
     }
-    this.service.prepararPago(info).subscribe(
-      (response) => {
-      this.clientSecret = response;
-      // Aquí puedes redirigir al usuario a la página de pago de Stripe utilizando el clientSecret recibido
-    }, (error) => {
-      console.error('Error al preparar el pago:', error);
-      // Aquí puedes mostrar un mensaje de error al usuario o manejar el error de alguna otra manera
+
+    this.http.get<any>(`http://localhost:8080/reservas/resumen?compraToken=${token}`).subscribe({
+      next: (res) => {
+        // Si el backend devuelve el objeto Token, las entradas están en res.entradas
+        // Si devuelve directamente la lista, se queda como res
+        const entradasResumen = res.entradas || res;
+
+        this.entradas = entradasResumen.map((entrada: any) => {
+          const entradaCarrito = carrito.find((item: any) => item.id === entrada.id);
+          return {
+            ...entrada,
+            espectaculo: entrada.espectaculo || entradaCarrito?.espectaculo
+          };
+        });
+
+        // Calculamos el total recorriendo la lista de entradas
+        this.total = this.entradas.reduce((acc, e) => acc + (e.precio / 100), 0);
+      },
+      error: (err) => console.error("Error al cargar el resumen", err)
     });
   }
 
-showForm() {
- let elements = this.stripe.elements()
- let style = {
- base: {
- color: "#32325d", fontFamily: 'Arial, sans-serif',
- fontSmoothing: "antialiased", fontSize: "16px",
- "::placeholder": {
- color: "#32325d"
- }
- },invalid: {
- fontFamily: 'Arial, sans-serif', color: "#fa755a",
- iconColor: "#fa755a"
- }
- }
- let card = elements.create("card", { style : style })
- card.mount("#card-element")
- card.on("change", function(event : any) {
- document.querySelector("button")!.disabled = event.empty;
- document.querySelector("#card-error")!.textContent =
-event.error ? event.error.message : "";
- });
- let self = this
- let form = document.getElementById("payment-form");
- form!.addEventListener("submit", function(event) {
- event.preventDefault();
- self.payWithCard(card);
- });
- form!.style.display = "block"
-}
-  payWithCard(card: any) { //Añadir del pdf
-    throw new Error('Method not implemented.');
+  irAlPago() {
+    let info = {
+      centimos: Math.floor(this.total * 100)
+    };
+
+    this.service.prepararPago(info).subscribe({
+      next: (response) => {
+        this.clientSecret = response;
+        this.showForm();
+      },
+      error: (error) => {
+        console.error('Error al preparar el pago:', error);
+      }
+    });
   }
 
-}
+  showForm() {
+    let elements = this.stripe.elements();
 
-// Para utilizar el Stripe en el frontend con angular, con nmp 
+    let style = {
+      base: {
+        color: "#32325d",
+        fontFamily: 'Arial, sans-serif',
+        fontSmoothing: "antialiased",
+        fontSize: "16px",
+        "::placeholder": {
+          color: "#32325d"
+        }
+      },
+      invalid: {
+        fontFamily: 'Arial, sans-serif',
+        color: "#fa755a",
+        iconColor: "#fa755a"
+      }
+    };
+
+    this.card = elements.create("card", { style: style });
+    this.card.mount("#card-element");
+
+    this.card.on("change", function (event: any) {
+      document.querySelector("button")!.toggleAttribute("disabled", event.empty);
+      document.querySelector("#card-error")!.textContent =
+        event.error ? event.error.message : "";
+    });
+
+    let self = this;
+
+    let form = document.getElementById("payment-form");
+    form!.addEventListener("submit", function (event) {
+      event.preventDefault();
+      self.payWithCard();
+    });
+
+    form!.style.display = "block";
+  }
+
+  async payWithCard() {
+    if (!this.clientSecret) {
+      console.error("No hay clientSecret");
+      return;
+    }
+
+    const result = await this.stripe.confirmCardPayment(this.clientSecret, {
+      payment_method: {
+        card: this.card
+      }
+    });
+
+    if (result.error) {
+      // Mostrar error al usuario
+      const errorElement = document.getElementById("card-error");
+      if (errorElement) {
+        errorElement.textContent = result.error.message;
+      }
+    } else {
+      if (result.paymentIntent.status === "succeeded") {
+        alert("Pago realizado correctamente");
+        // Aquí puedes redirigir o limpiar el carrito
+      }
+    }
+  }
+}

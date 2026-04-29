@@ -27,4 +27,7 @@ export class EspectaculosService {
   getNumeroDeEntradasComoDto(espectaculo: any) {
     return this.http.get(`http://localhost:8080/busqueda/getNumeroDeEntradasComoDto?espectaculoId=${espectaculo.id}`);
   }
+  getToken() {
+    return this.http.get('http://localhost:8080/auth/getToken', { withCredentials: true });
+  }
 }
