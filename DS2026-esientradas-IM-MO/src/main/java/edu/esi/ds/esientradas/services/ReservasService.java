@@ -94,4 +94,30 @@ public class ReservasService {
 
         return token;
     }
+
+    @Transactional
+    public void confirmarCompra(String compraToken, String userToken) {
+        // Validar que el compraToken existe
+        Token token = this.tokenDao.findById(compraToken).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token de compra no válido"));
+
+        // Si hay userToken, validar que pertenece al usuario correcto
+        if (userToken != null && !userToken.isEmpty() && !userToken.equals("null")
+                && !userToken.equals("undefined")) {
+            String emailActual = usuariosService.checkToken(userToken);
+            if (emailActual != null && !emailActual.equals(token.getEmailUsuario())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "No tienes permiso para confirmar esta compra");
+            }
+        }
+
+        // Marcar todas las entradas como VENDIDA
+        for (Entrada entrada : token.getEntradas()) {
+            this.entradaDao.updateEstado(entrada.getId(), Estado.VENDIDA);
+        }
+
+        // Marcar el token como pagado (si tienes un campo de estado en Token)
+        // token.setPagado(true);
+        // this.tokenDao.save(token);
+    }
 }

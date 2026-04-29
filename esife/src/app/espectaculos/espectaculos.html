@@ -26,9 +26,10 @@
                                 <div *ngFor="let entrada of zona.value" class="entrada-item" [ngClass]="{
                                         'seleccionada': estaSeleccionada(entrada), 
                                         'ocupada': entrada.estado === 'RESERVADA' && !estaSeleccionada(entrada),
+                                        'vendida': entrada.estado === 'VENDIDA',
                                         'disponible': entrada.estado === 'DISPONIBLE'
-                                    }" (click)="toggleSeleccion(espectaculo, entrada)">
-
+                                    }"
+                                    (click)="entrada.estado === 'DISPONIBLE' || estaSeleccionada(entrada) ? toggleSeleccion(espectaculo, entrada) : null">
                                     <span class="label">
                                         {{ entrada.zona ? 'Ticket' : 'F:'+entrada.fila+' P:'+entrada.columna }}
                                     </span>

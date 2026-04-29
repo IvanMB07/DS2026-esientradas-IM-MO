@@ -31,5 +31,15 @@
             Confirmar e ir al pago
         </button>
 
+        <!-- Formulario de pago (oculto hasta prepararPago) -->
+        <form id="payment-form" style="display:none;">
+            <div id="card-element"><!-- Stripe Elements montará aquí --></div>
+            <div id="card-error" role="alert" style="color:#fa755a;min-height:1.2rem;"></div>
+            <div style="margin-top:0.6rem; display:flex; gap:0.5rem;">
+                <button type="submit" id="submit-button" class="btn-confirmar" disabled>Confirmar pago</button>
+                <button type="button" id="cancel-payment" class="btn-secondary">Cancelar</button>
+            </div>
+        </form>
+
     </div>
 </section>

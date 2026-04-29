@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Auth } from '../auth';
+import { Router } from '@angular/router';
 
 declare let Stripe: any;
 
@@ -20,10 +21,10 @@ export class Compra implements OnInit {
   total: number = 0;
   clientSecret?: string;
 
-  stripe = Stripe('pk_test_51T92li3gOJNjp26dAGHSKdNSIOYItMdsHRX9H7faPz7lA4aMItqNcJcdEEVtvnRhRuvL2LyH3iYDyctxx89hXwXF00UFwKEYL2'); // Aquí va tu clave pública de Stripe
+  stripe: any = null; // se inicializa dinámicamente con la clave pública del backend
   card: any;
 
-  constructor(private service: Pagos, private http: HttpClient, private auth: Auth) { }
+  constructor(private service: Pagos, private http: HttpClient, private auth: Auth, private router: Router) { }
 
   private getCompraToken(): string | null {
     return sessionStorage.getItem('compraToken');
@@ -35,7 +36,26 @@ export class Compra implements OnInit {
   }
 
   ngOnInit() {
-    this.cargarResumen();
+    // Inicializar Stripe solicitando la clave pública al backend
+    this.http.get('http://localhost:8080/pagos/publicKey', { responseType: 'text' }).subscribe({
+      next: (pk) => {
+        if (pk) {
+          try {
+            this.stripe = Stripe(pk);
+          } catch (e) {
+            console.error('Error inicializando Stripe con la clave pública:', e);
+          }
+        } else {
+          console.warn('No hay clave pública de Stripe configurada en el backend.');
+        }
+        this.cargarResumen();
+      },
+      error: (err) => {
+        console.error('Error obteniendo la clave pública de Stripe:', err);
+        // Aun así cargamos el resumen para no bloquear la vista
+        this.cargarResumen();
+      }
+    });
   }
 
   cargarResumen() {
@@ -114,22 +134,35 @@ export class Compra implements OnInit {
 
     this.card = elements.create("card", { style: style });
     this.card.mount("#card-element");
-
-    this.card.on("change", function (event: any) {
-      document.querySelector("button")!.toggleAttribute("disabled", event.empty);
-      document.querySelector("#card-error")!.textContent =
-        event.error ? event.error.message : "";
+    this.card.on("change", (event: any) => {
+      const submitBtn = document.getElementById('submit-button') as HTMLButtonElement | null;
+      if (submitBtn) submitBtn.toggleAttribute('disabled', event.empty);
+      const errEl = document.querySelector("#card-error");
+      if (errEl) errEl.textContent = event.error ? event.error.message : "";
     });
 
     let self = this;
 
     let form = document.getElementById("payment-form");
-    form!.addEventListener("submit", function (event) {
-      event.preventDefault();
-      self.payWithCard();
-    });
+    if (form) {
+      const submitBtn = form.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        self.payWithCard();
+      });
 
-    form!.style.display = "block";
+      const cancel = document.getElementById('cancel-payment');
+      if (cancel) {
+        cancel.addEventListener('click', () => {
+          form!.style.display = 'none';
+        });
+      }
+
+      if (submitBtn) submitBtn.disabled = true;
+      form.style.display = "block";
+    } else {
+      console.error('No se encontró el formulario de pago (#payment-form)');
+    }
   }
 
   async payWithCard() {
@@ -152,9 +185,34 @@ export class Compra implements OnInit {
       }
     } else {
       if (result.paymentIntent.status === "succeeded") {
-        alert("Pago realizado correctamente");
-        // Aquí puedes redirigir o limpiar el carrito
+        // Pago confirmado por Stripe, ahora confirmar en el backend
+        this.confirmarPagoEnBackend();
       }
     }
+  }
+
+  private confirmarPagoEnBackend() {
+    const compraToken = this.getCompraToken();
+
+    if (!compraToken) {
+      console.error("No hay compraToken");
+      return;
+    }
+
+    // Llamar a /pagos/confirmar con el tokenPrerreserva
+    this.service.confirmarPago(compraToken).subscribe({
+      next: () => {
+        alert("¡Pago realizado correctamente! Entradas compradas.");
+        // Limpiar datos
+        sessionStorage.removeItem('compraToken');
+        sessionStorage.removeItem('carrito');
+        // Redirigir a la pantalla de espectáculos
+        this.router.navigate(['/espectaculos']);
+      },
+      error: (err) => {
+        console.error("Error al confirmar el pago:", err);
+        alert("Error al procesar la compra: " + (err.error || "Error desconocido"));
+      }
+    });
   }
 }

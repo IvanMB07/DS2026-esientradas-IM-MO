@@ -1,11 +1,10 @@
 package edu.esi.ds.esientradas.services;
 
-import java.util.List;
-
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
@@ -13,35 +12,60 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 
 import edu.esi.ds.esientradas.dao.EntradaDao;
-import edu.esi.ds.esientradas.model.Entrada;
+import edu.esi.ds.esientradas.dao.TokenDao;
+import edu.esi.ds.esientradas.model.Estado;
+import edu.esi.ds.esientradas.model.Token;
 import jakarta.transaction.Transactional;
 
 @Service
 public class PagosService {
-    @Value("${stripe.secret.key}") // La pondremos en application.properties
+    @Value("${stripe.secret.key}")
     private String stripeSecretKey;
 
-    // Aquí inyectarías tus servicios de PDF y Email cuando los crees
-    // @Autowired private PdfService pdfService;
+    @Autowired
+    private TokenDao tokenDao;
+
+    @Autowired
+    private EntradaDao entradaDao;
 
     public String prepararPago(Long totalCentimos) throws StripeException {
-        Stripe.apiKey = stripeSecretKey;
-        PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                .setCurrency("eur")
-                .setAmount(totalCentimos)
-                .build();
+        if (totalCentimos == null || totalCentimos <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El monto debe ser mayor que 0");
+        }
 
-        PaymentIntent intent = PaymentIntent.create(params);
-        JSONObject jso = new JSONObject(intent.toJson());
-        String clientSecret = jso.getString("client_secret");
-        System.out.println("Client Secret: " + clientSecret);
-        return intent.getClientSecret();
+        try {
+            if (stripeSecretKey == null || stripeSecretKey.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Clave de Stripe no configurada");
+            }
+
+            Stripe.apiKey = stripeSecretKey;
+            PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
+                    .setCurrency("eur")
+                    .setAmount(totalCentimos)
+                    .build();
+
+            PaymentIntent intent = PaymentIntent.create(params);
+            return intent.getClientSecret();
+        } catch (StripeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error al preparar el pago: " + e.getMessage());
+        }
     }
 
-     @Transactional
-    public void confirmarPago(String tokenPrerreserva) {
-        // 1. Buscar entradas asociadas al token de prerreserva
-        // 2. Cambiar su estado a VENDIDA
-        // 3. Generar PDF y enviar por email (Pasos finales)
+    @Transactional
+    public void confirmarPago(String tokenValor) {
+        Token token = this.tokenDao.findById(tokenValor).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token no encontrado"));
+
+        if (token.getEntradas() == null || token.getEntradas().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No hay entradas asociadas al token");
+        }
+
+        token.getEntradas().forEach(entrada -> this.entradaDao.updateEstado(entrada.getId(), Estado.VENDIDA));
     }
 }

@@ -7,8 +7,12 @@ import { Injectable } from '@angular/core';
 export class Pagos {
 
   constructor(private http: HttpClient) { }
-  
+
   prepararPago(info: any) {
     return this.http.post('http://localhost:8080/pagos/prepararPago', info, { responseType: 'text' });
+  }
+
+  confirmarPago(tokenPrerreserva: string) {
+    return this.http.post(`http://localhost:8080/pagos/confirmar?tokenPrerreserva=${tokenPrerreserva}`, {}, { responseType: 'text' });
   }
 }

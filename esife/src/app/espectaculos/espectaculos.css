@@ -25,21 +25,16 @@
     box-shadow: var(--shadow);
 }
 
-/* --- Elementos Interactivos (Escenarios y Espectáculos) --- */
 .interactive {
     cursor: pointer !important;
-    /* Fuerza la aparición de la mano */
     font-weight: 700;
     transition: all 0.2s ease;
     display: inline-block;
-    /* Ayuda a que el área de clic sea sólida */
 }
 
 .interactive:hover {
     color: var(--primary);
-    /* Cambia al verde de vuestro tema */
     transform: translateX(5px);
-    /* Pequeño efecto de movimiento al hover */
 }
 
 .info-espectaculo {
@@ -66,7 +61,7 @@
     margin-left: 10px;
 }
 
-/* --- Grid de Butacas (Nuevo Diseño) --- */
+/* --- Grid de Butacas --- */
 .zonas-container {
     margin-top: 15px;
     padding-left: 20px;
@@ -80,31 +75,59 @@
 }
 
 .entrada-item {
-    padding: 8px;
+    padding: 10px;
     border: 1px solid #ccc;
     cursor: pointer;
     border-radius: 4px;
     text-align: center;
     min-width: 80px;
     background: #fff;
-    transition: transform 0.1s;
+    transition: all 0.2s;
 }
 
 .entrada-item:active {
     transform: scale(0.95);
 }
 
+/* ESTADOS DE LAS BUTACAS */
+
+/* 1. Disponible (Libre) */
+.entrada-item.disponible {
+    background-color: #ffffff;
+    border-color: #ccc;
+}
+
+/* 2. Seleccionada por TI (Carrito activo) */
 .entrada-item.seleccionada {
     background-color: #28a745;
     color: white;
     border-color: #1e7e34;
 }
 
+/* 3. Ocupada / Reservada por OTROS (Temporal) */
 .entrada-item.ocupada {
-    background-color: #e9ecef;
-    color: #adb5bd;
+    background-color: #ffc107;
+    /* Color ámbar/naranja para reservas */
+    color: #212529;
     cursor: not-allowed;
-    border-color: #dee2e6;
+    opacity: 0.8;
+}
+
+/* 4. VENDIDA (Definitivo) */
+.entrada-item.vendida {
+    background-color: #343a40;
+    /* Gris carbón muy oscuro */
+    color: #6c757d;
+    cursor: not-allowed;
+    border-color: #212529;
+    opacity: 0.5;
+    pointer-events: none;
+    /* Bloqueo total de interacción */
+}
+
+.entrada-item.vendida .precio {
+    text-decoration: line-through;
+    /* Precio tachado */
 }
 
 /* --- Panel de Carrito Flotante --- */
@@ -136,36 +159,6 @@
 
 .btn-comprar:hover {
     background: #ff6b81;
-}
-
-/* Estilo base de la butaca */
-.entrada-item {
-    padding: 10px;
-    border: 1px solid #ccc;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-/* Estado: Libre */
-.entrada-item.disponible {
-    background-color: white;
-}
-
-/* Estado: Seleccionada por TI (Verde) */
-.entrada-item.seleccionada {
-    background-color: #28a745;
-    color: white;
-    border-color: #1e7e34;
-}
-
-/* Estado: Ocupada por OTROS (Gris/Bloqueado) */
-.entrada-item.ocupada {
-    background-color: #e9ecef;
-    color: #adb5bd;
-    cursor: not-allowed;
-    opacity: 0.6;
-    pointer-events: none;
-    /* Evita que el usuario haga clic en lo ajeno */
 }
 
 /* --- Responsivo --- */

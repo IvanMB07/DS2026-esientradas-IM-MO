@@ -1,8 +1,5 @@
 package edu.esi.ds.esientradas.http;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +16,8 @@ import org.springframework.web.server.ResponseStatusException;
 import com.stripe.exception.StripeException;
 
 import edu.esi.ds.esientradas.services.PagosService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
 @RequestMapping("/pagos")
@@ -28,13 +27,31 @@ public class PagosController {
     @Autowired
     private PagosService pagosService;
 
+    @Value("${stripe.publishable.key:}")
+    private String stripePublishableKey;
+
     @PostMapping("/prepararPago")
     public String prepararPago(@RequestBody Map<String, Object> infoPago) throws StripeException {
-        Long centimos = ((Number) infoPago.get("totalCentimos")).longValue();
+        Long centimos = null;
+
+        if (infoPago.get("centimos") != null) {
+            centimos = ((Number) infoPago.get("centimos")).longValue();
+        } else if (infoPago.get("totalCentimos") != null) {
+            centimos = ((Number) infoPago.get("totalCentimos")).longValue();
+        } else if (infoPago.get("monto") != null) {
+            centimos = ((Number) infoPago.get("monto")).longValue();
+        }
+
+        if (centimos == null || centimos <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Se requiere centimos, totalCentimos o monto en el request (mayor que 0)");
+        }
+
         try {
             return pagosService.prepararPago(centimos);
         } catch (StripeException e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error al crear el intento de pago", e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error de Stripe: " + e.getMessage(), e);
         }
     }
 
@@ -43,5 +60,13 @@ public class PagosController {
     public ResponseEntity<String> confirmar(@RequestParam String tokenPrerreserva) {
         pagosService.confirmarPago(tokenPrerreserva);
         return ResponseEntity.ok("Pago confirmado y entradas enviadas");
+    }
+
+    @GetMapping("/publicKey")
+    public ResponseEntity<String> getPublishableKey() {
+        if (this.stripePublishableKey == null || this.stripePublishableKey.isEmpty()) {
+            return ResponseEntity.status(500).body("");
+        }
+        return ResponseEntity.ok(this.stripePublishableKey);
     }
 }
