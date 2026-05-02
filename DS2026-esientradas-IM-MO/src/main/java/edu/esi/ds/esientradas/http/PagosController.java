@@ -57,8 +57,8 @@ public class PagosController {
 
     // Paso 2: El frontend confirma que Stripe procesó el pago
     @PostMapping("/confirmar")
-    public ResponseEntity<String> confirmar(@RequestParam String tokenPrerreserva) {
-        pagosService.confirmarPago(tokenPrerreserva);
+    public ResponseEntity<String> confirmar(@RequestParam String tokenPrerreserva, @RequestParam String tokenUsuario) {
+        pagosService.confirmarPago(tokenPrerreserva, tokenUsuario);
         return ResponseEntity.ok("Pago confirmado y entradas enviadas");
     }
 

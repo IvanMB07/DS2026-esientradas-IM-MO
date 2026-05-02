@@ -12,8 +12,10 @@ import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 
 import edu.esi.ds.esientradas.dao.EntradaDao;
+import edu.esi.ds.esientradas.dao.PdfDao;
 import edu.esi.ds.esientradas.dao.TokenDao;
 import edu.esi.ds.esientradas.model.Estado;
+import edu.esi.ds.esientradas.model.PdfEntidad;
 import edu.esi.ds.esientradas.model.Token;
 import jakarta.transaction.Transactional;
 
@@ -26,7 +28,16 @@ public class PagosService {
     private TokenDao tokenDao;
 
     @Autowired
+    private UsuariosService usuariosService;
+
+    @Autowired
     private EntradaDao entradaDao;
+
+    @Autowired
+    private PdfDao pdfDao;
+
+    @Autowired
+    private PdfService pdfService;
 
     public String prepararPago(Long totalCentimos) throws StripeException {
         if (totalCentimos == null || totalCentimos <= 0) {
@@ -57,15 +68,24 @@ public class PagosService {
     }
 
     @Transactional
-    public void confirmarPago(String tokenValor) {
-        Token token = this.tokenDao.findById(tokenValor).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token no encontrado"));
+    public void confirmarPago(String tokenReserva, String tokenUsuario) {
+        // 1. Obtener email (Comunicación Backend -> Backend)
+        String email = usuariosService.checkToken(tokenUsuario);
 
-        if (token.getEntradas() == null || token.getEntradas().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "No hay entradas asociadas al token");
-        }
+        // 2. Lógica de BD (Entradas a VENDIDA)
+        Token token = tokenDao.findById(tokenReserva).get();
+        token.getEntradas().forEach(e -> e.setEstado(Estado.VENDIDA));
 
-        token.getEntradas().forEach(entrada -> this.entradaDao.updateEstado(entrada.getId(), Estado.VENDIDA));
+        // 3. Generar PDF (PdfService local de esientradas)
+        byte[] pdf = pdfService.generarFactura(email, token.getEntradas());
+
+        // 4. Guardar registro (PdfDao local)
+        PdfEntidad reg = new PdfEntidad();
+        reg.setEmailUsuario(email);
+        reg.setContenido(pdf);
+        pdfDao.save(reg);
+
+        // 5. ENVIAR AL OTRO BACKEND PARA EL EMAIL
+        usuariosService.enviarPdfAExterno(email, pdf);
     }
 }

@@ -193,14 +193,20 @@ export class Compra implements OnInit {
 
   private confirmarPagoEnBackend() {
     const compraToken = this.getCompraToken();
+    const userToken = this.auth.getToken();
 
     if (!compraToken) {
       console.error("No hay compraToken");
       return;
     }
 
+    if (!userToken) {
+      console.error("No hay userToken");
+      return;
+    }
+
     // Llamar a /pagos/confirmar con el tokenPrerreserva
-    this.service.confirmarPago(compraToken).subscribe({
+    this.service.confirmarPago(compraToken, userToken).subscribe({
       next: () => {
         alert("¡Pago realizado correctamente! Entradas compradas.");
         // Limpiar datos

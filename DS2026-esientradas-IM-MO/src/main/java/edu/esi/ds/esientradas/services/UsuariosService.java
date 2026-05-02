@@ -1,5 +1,8 @@
 package edu.esi.ds.esientradas.services;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -24,6 +27,18 @@ public class UsuariosService {
 		} catch (RestClientException e) {
 			throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Error de comunicación con esiusuarios");
 		}
+	}
+
+	public void enviarPdfAExterno(String email, byte[] pdfBytes) {
+		String endpoint = "http://localhost:8081/external/sendEmailWithPdf";
+		RestTemplate restTemplate = new RestTemplate();
+
+		// Preparamos el cuerpo con el PDF en Base64
+		Map<String, String> body = new HashMap<>();
+		body.put("email", email);
+		body.put("pdfBase64", java.util.Base64.getEncoder().encodeToString(pdfBytes));
+
+		restTemplate.postForObject(endpoint, body, String.class);
 	}
 
 }

@@ -5,10 +5,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import edu.esi.ds.esiusuarios.dto.EmailRequest;
+import edu.esi.ds.esiusuarios.services.EmailService;
 import edu.esi.ds.esiusuarios.services.UserService;
 
 @CrossOrigin(origins = "*") // Permitir CORS para todas las fuentes (ajusta según tus necesidades de
@@ -19,6 +23,8 @@ public class ExternalController {
 
     @Autowired
     private UserService service;
+    @Autowired
+    private EmailService emailService;
 
     @GetMapping("/checkToken/{token}")
     public String checkToken(@PathVariable String token) {
@@ -38,5 +44,14 @@ public class ExternalController {
         // 4. Devolvemos el email del usuario (que sirve como identificador para
         // esientradas)
         return email;
+    }
+
+    @PostMapping("/sendEmailWithPdf")
+    public void sendEmailWithPdf(@RequestBody EmailRequest request) {
+        // Decodificamos el Base64 de vuelta a bytes
+        byte[] pdfBytes = java.util.Base64.getDecoder().decode(request.getPdfBase64());
+
+        // Llamamos al servicio de email (ahora en esiusuarios)
+        this.emailService.sendEmail(request.getEmail(), "Tus Entradas", pdfBytes);
     }
 }

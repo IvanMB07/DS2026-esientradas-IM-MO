@@ -12,7 +12,7 @@ export class Pagos {
     return this.http.post('http://localhost:8080/pagos/prepararPago', info, { responseType: 'text' });
   }
 
-  confirmarPago(tokenPrerreserva: string) {
-    return this.http.post(`http://localhost:8080/pagos/confirmar?tokenPrerreserva=${tokenPrerreserva}`, {}, { responseType: 'text' });
+  confirmarPago(tokenPrerreserva: string, tokenUsuario: string) {
+    return this.http.post(`http://localhost:8080/pagos/confirmar?tokenPrerreserva=${tokenPrerreserva}&tokenUsuario=${tokenUsuario}`, {}, { responseType: 'text' });
   }
 }
