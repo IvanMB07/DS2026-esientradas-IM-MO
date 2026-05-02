@@ -1,8 +1,10 @@
 package edu.esi.ds.esientradas.http;
 
+import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import edu.esi.ds.esientradas.model.Token;
 import edu.esi.ds.esientradas.services.ReservasService;
 
 @RestController
@@ -35,5 +37,10 @@ public class ReservasController {
     public Object getResumen(@RequestParam String compraToken,
             @RequestParam(required = false) String userToken) {
         return this.service.getResumenCompra(compraToken, userToken);
+    }
+
+    @GetMapping("/carritos-usuario")
+    public List<Token> getCarritosUsuario(@RequestParam String userToken) {
+        return this.service.getCarritosDelUsuario(userToken);
     }
 }

@@ -66,6 +66,22 @@ public class UserController {
         return token;
     }
 
+    @PostMapping("/logout")
+    public void logout(@RequestBody Map<String, String> body) {
+        JSONObject jso = new JSONObject(body);
+        String email = jso.optString("email");
+        String token = jso.optString("token");
+
+        if (email.isEmpty() || token.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email o token ausente");
+        }
+
+        boolean exito = this.service.logout(email, token);
+        if (!exito) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token inválido");
+        }
+    }
+
     @PostMapping("/forgot-password")
     public void forgotPassword(@RequestBody Map<String, String> body) {
         String email = new JSONObject(body).optString("email");

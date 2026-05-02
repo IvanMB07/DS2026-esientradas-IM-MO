@@ -19,24 +19,71 @@ public class UserService {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private EmailServicePasswordRecovery emailServicePasswordRecovery;
+
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public String login(String email, String password) {
         Optional<User> uOpt = userDao.findByEmail(email);
+        System.out.println("LOGIN: Buscando usuario: " + email);
+
         if (uOpt.isPresent()) {
             User user = uOpt.get();
-            // Verifica la contraseña contra el hash de la BD
-            if (encoder.matches(password, user.getPassword())) {
+            String storedPassword = user.getPassword();
+            String storedToken = user.getToken();
+
+            System.out.println("LOGIN: Usuario encontrado. Token en BD: "
+                    + (storedToken != null ? storedToken.substring(0, 8) + "..." : "NULL"));
+            System.out.println(
+                    "LOGIN: Password en BD es plana: " + (storedPassword != null && !storedPassword.startsWith("$2")));
+
+            // Intenta validar con BCrypt primero (para contraseñas encriptadas)
+            if (storedPassword != null && (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$"))) {
+                System.out.println("LOGIN: Validando con BCrypt");
+                if (encoder.matches(password, storedPassword)) {
+                    // Si el token es NULL o vacío, generar uno nuevo
+                    if (storedToken == null || storedToken.isEmpty()) {
+                        storedToken = UUID.randomUUID().toString();
+                        user.setToken(storedToken);
+                        userDao.save(user);
+                        System.out.println("LOGIN: Token era NULL, generando uno nuevo");
+                    }
+                    System.out.println("LOGIN: ✓ BCrypt OK. Devolviendo token: " + storedToken);
+                    return storedToken;
+                }
+            } else if (storedPassword != null && storedPassword.equals(password)) {
+                System.out.println("LOGIN: Validando con contraseña plana");
+                // FALLBACK: Contraseña plana coincide (legacy data o inserción manual)
+                // Encriptamos y guardamos para futuras comparaciones
+                user.setPassword(encoder.encode(password));
+                // NO generar nuevo token, mantener el existente
+                if (storedToken == null || storedToken.isEmpty()) {
+                    user.setToken(UUID.randomUUID().toString());
+                    System.out.println("LOGIN: Token era NULL, generando uno nuevo");
+                }
+                userDao.save(user);
+                System.out.println("LOGIN: ✓ Contraseña plana OK. Devolviendo token: " + user.getToken());
                 return user.getToken();
+            } else {
+                System.out.println("LOGIN: ✗ Contraseña NO coincide");
+                System.out.println("LOGIN: Esperada: " + password + " | En BD: "
+                        + (storedPassword != null ? storedPassword.substring(0, Math.min(20, storedPassword.length()))
+                                : "NULL"));
             }
+        } else {
+            System.out.println("LOGIN: ✗ Usuario NO encontrado en BD");
         }
         return null;
     }
 
     // Cambiado a 'registrar' para coincidir con el Controller
     public String registrar(String email, String password) {
+        System.out.println("REGISTRAR: Intentando crear usuario: " + email);
+
         // SEGURIDAD: Verificamos si el usuario ya existe antes de crear otro
         if (userDao.existsById(email)) {
+            System.out.println("REGISTRAR: ✗ Usuario ya existe");
             return null;
         }
 
@@ -46,10 +93,12 @@ public class UserService {
         String defaultName = email.split("@")[0];
 
         User newUser = new User(defaultName, email, encodedPassword);
-        newUser.setToken(UUID.randomUUID().toString());
+        String token = UUID.randomUUID().toString();
+        newUser.setToken(token);
 
         userDao.save(newUser);
-        return newUser.getToken(); // Devolvemos el token para que el usuario ya esté "logueado"
+        System.out.println("REGISTRAR: ✓ Usuario creado con token: " + token.substring(0, 8) + "...");
+        return token; // Devolvemos el token para que el usuario ya esté "logueado"
     }
 
     public String checkToken(String token) {
@@ -75,10 +124,11 @@ public class UserService {
 
             userDao.save(user);
 
-            // 3. Enviamos el "email" (se verá en la consola de VS Code)
-            emailService.sendEmail(email,
-                    "Asunto", "Recuperación de contraseña",
-                    "Cuerpo", "Tu token de recuperación es: " + token + ". Caduca en 15 minutos.");
+            // 3. Enviamos el "email" usando el servicio de recuperación de contraseña
+            String cuerpo = "Tu token de recuperación es: " + token + ". Caduca en 15 minutos.";
+            emailServicePasswordRecovery.sendEmail(email,
+                    "Recuperación de contraseña",
+                    cuerpo);
         }
     }
 
@@ -107,4 +157,18 @@ public class UserService {
     public void cancelarCuenta(String email) {
         userDao.deleteById(email);
     }
+
+    public boolean logout(String email, String token) {
+        Optional<User> uOpt = userDao.findByEmail(email);
+        if (uOpt.isPresent()) {
+            User user = uOpt.get();
+            if (user.getToken() != null && user.getToken().equals(token)) {
+                user.setToken(null);
+                userDao.save(user);
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

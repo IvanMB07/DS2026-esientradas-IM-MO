@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { Auth } from '../auth';
 import { Router } from '@angular/router';
 
+type AuthMode = 'login' | 'register' | 'forgot-password' | 'reset-password';
+
 @Component({
   selector: 'app-auth',
   standalone: true,
@@ -12,56 +14,195 @@ import { Router } from '@angular/router';
   styleUrl: './auth.css'
 })
 export class AuthComponent {
+  // Campos comunes
   email = '';
   pwd = '';
   pwd2 = '';
-  isLoginMode = true;
   mensaje = '';
+  isLoading = false;
+
+  // Modo actual de autenticación
+  authMode: AuthMode = 'login';
+
+  // Campos para recuperación de contraseña
+  resetToken = '';
+  nuevaPassword = '';
+  confirmarPassword = '';
 
   constructor(private auth: Auth, private router: Router) { }
 
-  toggleMode() {
-    this.isLoginMode = !this.isLoginMode;
+  // Cambiar modo de autenticación
+  setMode(mode: AuthMode) {
+    this.authMode = mode;
+    this.limpiarFormulario();
     this.mensaje = '';
   }
 
-  private redirigirPostLogin() {
-    // Miramos si el usuario dejó un carrito a medias
-    const compraToken = sessionStorage.getItem('compraToken');
+  private limpiarFormulario() {
+    this.email = '';
+    this.pwd = '';
+    this.pwd2 = '';
+    this.resetToken = '';
+    this.nuevaPassword = '';
+    this.confirmarPassword = '';
+  }
 
+  private redirigirPostLogin() {
+    // Primero, intentar recuperar carritos pendientes del usuario
+    this.auth.getCarritosUsuario().subscribe({
+      next: (carritos) => {
+        if (carritos && carritos.length > 0) {
+          // Usar el carrito más reciente (primer elemento, ya ordenados por backend)
+          const carritoActual = carritos[0];
+          sessionStorage.setItem('compraToken', carritoActual.valor);
+          console.log('Carrito sincronizado desde servidor:', carritoActual.valor);
+          this.redirigirAlDestino();
+        } else {
+          // No hay carritos previos, ir a espectáculos
+          this.redirigirAlDestino();
+        }
+      },
+      error: (err) => {
+        console.warn('No se pudieron recuperar carritos previos:', err);
+        this.redirigirAlDestino();
+      }
+    });
+  }
+
+  private redirigirAlDestino() {
+    const compraToken = sessionStorage.getItem('compraToken');
     if (compraToken && compraToken !== 'null' && compraToken !== 'undefined' && compraToken !== '') {
-      // Si hay entradas reservadas, le mandamos directo a la caja[cite: 2]
       this.router.navigate(['/comprar']);
     } else {
-      // Si no, a la pantalla principal
       this.router.navigate(['/espectaculos']);
     }
   }
 
-  onSubmit() {
-    if (this.isLoginMode) {
-      this.auth.login(this.email, this.pwd).subscribe({
-        next: (token) => {
-          this.auth.saveToken(token);
-          this.mensaje = '¡Bienvenido! Accediendo a su pedido...';
+  // LOGIN
+  onLoginSubmit() {
+    if (!this.email || !this.pwd) {
+      this.mensaje = 'Por favor completa todos los campos';
+      return;
+    }
 
-          // Retardo para que el usuario vea el mensaje de bienvenida
-          setTimeout(() => this.redirigirPostLogin(), 1500);
-        },
-        error: () => this.mensaje = 'Error: Email o contraseña incorrectos'
-      });
-    } else {
-      this.auth.registrar(this.email, this.pwd, this.pwd2).subscribe({
-        next: (token) => {
-          this.auth.saveToken(token);
-          this.mensaje = 'Cuenta creada con éxito. Redirigiendo...';
+    this.isLoading = true;
+    this.auth.login(this.email, this.pwd).subscribe({
+      next: (token) => {
+        this.auth.saveToken(token, this.email);
+        this.mensaje = '¡Bienvenido! Accediendo a su pedido...';
+        setTimeout(() => this.redirigirPostLogin(), 1500);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.mensaje = 'Error: Email o contraseña incorrectos';
+      }
+    });
+  }
 
-          setTimeout(() => this.redirigirPostLogin(), 1500);
-        },
-        error: (err) => {
-          this.mensaje = err.status === 409 ? 'El usuario ya existe' : 'Error en el registro';
+  // REGISTER
+  onRegisterSubmit() {
+    if (!this.email || !this.pwd || !this.pwd2) {
+      this.mensaje = 'Por favor completa todos los campos';
+      return;
+    }
+
+    if (this.pwd !== this.pwd2) {
+      this.mensaje = 'Las contraseñas no coinciden';
+      return;
+    }
+
+    this.isLoading = true;
+    this.auth.registrar(this.email, this.pwd, this.pwd2).subscribe({
+      next: (token) => {
+        this.auth.saveToken(token, this.email);
+        this.mensaje = 'Cuenta creada con éxito. Redirigiendo...';
+        setTimeout(() => this.redirigirPostLogin(), 1500);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.mensaje = err.status === 409 ? 'El usuario ya existe' : 'Error en el registro';
+      }
+    });
+  }
+
+  // FORGOT PASSWORD - Solicitar token de recuperación
+  onForgotPasswordSubmit() {
+    if (!this.email) {
+      this.mensaje = 'Por favor ingresa tu email';
+      return;
+    }
+
+    this.isLoading = true;
+    this.auth.forgotPassword(this.email).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.mensaje = '✓ Te enviamos un email con el token de recuperación. Revisa tu bandeja de entrada.';
+        this.email = '';
+
+        // Mostrar opción para ingresar el token en 3 segundos
+        setTimeout(() => {
+          this.setMode('reset-password');
+        }, 3000);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.mensaje = 'Error: No pudimos procesar tu solicitud';
+      }
+    });
+  }
+
+  // RESET PASSWORD - Resetear contraseña con token
+  onResetPasswordSubmit() {
+    if (!this.resetToken || !this.nuevaPassword || !this.confirmarPassword) {
+      this.mensaje = 'Por favor completa todos los campos';
+      return;
+    }
+
+    if (this.nuevaPassword !== this.confirmarPassword) {
+      this.mensaje = 'Las contraseñas nuevas no coinciden';
+      return;
+    }
+
+    if (this.nuevaPassword.length < 6) {
+      this.mensaje = 'La contraseña debe tener al menos 6 caracteres';
+      return;
+    }
+
+    this.isLoading = true;
+    this.auth.resetPassword(this.resetToken, this.nuevaPassword).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.mensaje = '✓ Contraseña actualizada correctamente. Redirigiendo a login...';
+        setTimeout(() => {
+          this.setMode('login');
+          this.mensaje = 'Ahora puedes iniciar sesión con tu nueva contraseña';
+        }, 2000);
+      },
+      error: (err) => {
+        this.isLoading = false;
+        if (err.status === 410) { // GONE - Token expirado
+          this.mensaje = 'Error: El token de recuperación ha expirado. Solicita uno nuevo.';
+        } else {
+          this.mensaje = 'Error: No pudimos actualizar tu contraseña';
         }
-      });
+      }
+    });
+  }
+
+  onSubmit() {
+    switch (this.authMode) {
+      case 'login':
+        this.onLoginSubmit();
+        break;
+      case 'register':
+        this.onRegisterSubmit();
+        break;
+      case 'forgot-password':
+        this.onForgotPasswordSubmit();
+        break;
+      case 'reset-password':
+        this.onResetPasswordSubmit();
+        break;
     }
   }
 }

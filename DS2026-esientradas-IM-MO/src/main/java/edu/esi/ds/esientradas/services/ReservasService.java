@@ -82,14 +82,27 @@ public class ReservasService {
         Token token = this.tokenDao.findById(tokenValor).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sesión expirada"));
 
-        // Si hay userToken y el token no está vinculado a un usuario, vincularlo
+        String emailActual = null;
+
+        // Obtener email del usuario actual si tiene userToken válido
         if (userToken != null && !userToken.isEmpty() && !userToken.equals("null")
-                && !userToken.equals("undefined") && token.getEmailUsuario() == null) {
-            String emailActual = usuariosService.checkToken(userToken);
+                && !userToken.equals("undefined")) {
+            emailActual = usuariosService.checkToken(userToken);
+        }
+
+        // CASO 1: Si el token no tiene emailUsuario asignado, asignarlo
+        if (token.getEmailUsuario() == null) {
             if (emailActual != null) {
                 token.setEmailUsuario(emailActual);
                 this.tokenDao.save(token);
+                System.out.println("[RESERVAS] Token vinculado a usuario: " + emailActual);
             }
+        }
+        // CASO 2: Si el token YA tiene emailUsuario, validar que sea el mismo usuario
+        else if (emailActual != null && !emailActual.equals(token.getEmailUsuario())) {
+            // El usuario intenta acceder a un token de otro usuario
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Este carrito pertenece a otro usuario: " + token.getEmailUsuario());
         }
 
         return token;
@@ -105,7 +118,8 @@ public class ReservasService {
         if (userToken != null && !userToken.isEmpty() && !userToken.equals("null")
                 && !userToken.equals("undefined")) {
             String emailActual = usuariosService.checkToken(userToken);
-            if (emailActual != null && !emailActual.equals(token.getEmailUsuario())) {
+            if (emailActual != null && token.getEmailUsuario() != null
+                    && !emailActual.equals(token.getEmailUsuario())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                         "No tienes permiso para confirmar esta compra");
             }
@@ -119,5 +133,66 @@ public class ReservasService {
         // Marcar el token como pagado (si tienes un campo de estado en Token)
         // token.setPagado(true);
         // this.tokenDao.save(token);
+    }
+
+    public List<Token> getCarritosDelUsuario(String userToken) {
+        // Obtener email del usuario desde el userToken
+        if (userToken == null || userToken.isEmpty() || userToken.equals("null")
+                || userToken.equals("undefined")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token de usuario no válido");
+        }
+
+        String emailUsuario = usuariosService.checkToken(userToken);
+        if (emailUsuario == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token de usuario expirado o inválido");
+        }
+
+        System.out.println("[RESERVAS] Buscando carritos para usuario: " + emailUsuario);
+
+        // 1. Buscar carritos YA vinculados al usuario
+        List<Token> carritos = this.tokenDao.findByEmailUsuarioOrderByHoraDesc(emailUsuario);
+
+        System.out.println("[RESERVAS] Carritos vinculados a " + emailUsuario + ": " + carritos.size());
+
+        // 2. Si no hay carritos vinculados, buscar carritos sin vinculación
+        // (emailUsuario = null)
+        // que probablemente el usuario creó antes de loguear
+        if (carritos.isEmpty()) {
+            System.out.println("[RESERVAS] Buscando carritos sin vinculación (emailUsuario = null)...");
+            List<Token> unboundTokens = this.tokenDao.findRecentUnboundTokens();
+
+            // Tomar el más reciente (primer elemento)
+            if (!unboundTokens.isEmpty()) {
+                Token tokenReciente = unboundTokens.get(0);
+
+                // Verificar que tenga entradas
+                if (tokenReciente.getEntradas() != null && !tokenReciente.getEntradas().isEmpty()) {
+                    // Vincularlo al usuario actual
+                    tokenReciente.setEmailUsuario(emailUsuario);
+                    this.tokenDao.save(tokenReciente);
+
+                    System.out.println("[RESERVAS] Token sin vinculación recuperado y vinculado a " + emailUsuario);
+                    System.out.println("[RESERVAS] Token: " + tokenReciente.getValor() + ", Entradas: "
+                            + tokenReciente.getEntradas().size());
+
+                    carritos = List.of(tokenReciente);
+                }
+            }
+        }
+
+        // Filtrar solo los que tienen entradas
+        List<Token> carritosConEntradas = carritos.stream()
+                .filter(t -> t.getEntradas() != null && !t.getEntradas().isEmpty())
+                .toList();
+
+        System.out.println(
+                "[RESERVAS] Total carritos con entradas para " + emailUsuario + ": " + carritosConEntradas.size());
+
+        for (Token t : carritosConEntradas) {
+            System.out.println("  - Token: " + t.getValor() + ", Entradas: " + t.getEntradas().size()
+                    + ", Email: " + t.getEmailUsuario() + ", Hora: " + t.getHora());
+        }
+
+        return carritosConEntradas;
     }
 }

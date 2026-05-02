@@ -1,21 +1,113 @@
 <div class="auth-container">
-    <h2>{{ isLoginMode ? 'Iniciar sesión' : 'Crear cuenta' }}</h2>
-    <p class="auth-subtitle">Gestiona tu acceso en unos segundos.</p>
+    <!-- MODO LOGIN -->
+    <ng-container *ngIf="authMode === 'login'">
+        <h2>Iniciar sesión</h2>
+        <p class="auth-subtitle">Accede a tu cuenta para comprar entradas</p>
 
-    <form (ngSubmit)="onSubmit()" class="auth-form">
-        <input type="email" name="email" [(ngModel)]="email" placeholder="Email" required>
+        <form (ngSubmit)="onSubmit()" class="auth-form">
+            <input type="email" name="email" [(ngModel)]="email" placeholder="Email" required [disabled]="isLoading">
 
-        <input type="password" name="pwd" [(ngModel)]="pwd" placeholder="Contraseña" required>
+            <input type="password" name="pwd" [(ngModel)]="pwd" placeholder="Contraseña" required
+                [disabled]="isLoading">
 
-        <input *ngIf="!isLoginMode" type="password" name="pwd2" [(ngModel)]="pwd2" placeholder="Repetir Contraseña"
-            required>
+            <button type="submit" [disabled]="isLoading">
+                {{ isLoading ? 'Cargando...' : 'Entrar' }}
+            </button>
+        </form>
 
-        <button type="submit">{{ isLoginMode ? 'Entrar' : 'Registrarse' }}</button>
-    </form>
+        <p *ngIf="mensaje" class="auth-message">{{ mensaje }}</p>
 
-    <p *ngIf="mensaje" class="auth-message">{{ mensaje }}</p>
+        <div class="auth-links">
+            <a (click)="setMode('register')" class="auth-toggle" role="button" tabindex="0">
+                ¿No tienes cuenta? Regístrate aquí
+            </a>
+            <a (click)="setMode('forgot-password')" class="auth-forgot" role="button" tabindex="0">
+                ¿Olvidaste tu contraseña?
+            </a>
+        </div>
+    </ng-container>
 
-    <a (click)="toggleMode()" class="auth-toggle" role="button" tabindex="0">
-        {{ isLoginMode ? '¿No tienes cuenta? Regístrate aquí' : '¿Ya tienes cuenta? Entra aquí' }}
-    </a>
+    <!-- MODO REGISTER -->
+    <ng-container *ngIf="authMode === 'register'">
+        <h2>Crear cuenta</h2>
+        <p class="auth-subtitle">Regístrate para comprar entradas</p>
+
+        <form (ngSubmit)="onSubmit()" class="auth-form">
+            <input type="email" name="email" [(ngModel)]="email" placeholder="Email" required [disabled]="isLoading">
+
+            <input type="password" name="pwd" [(ngModel)]="pwd" placeholder="Contraseña" required
+                [disabled]="isLoading">
+
+            <input type="password" name="pwd2" [(ngModel)]="pwd2" placeholder="Repetir contraseña" required
+                [disabled]="isLoading">
+
+            <button type="submit" [disabled]="isLoading">
+                {{ isLoading ? 'Cargando...' : 'Registrarse' }}
+            </button>
+        </form>
+
+        <p *ngIf="mensaje" class="auth-message">{{ mensaje }}</p>
+
+        <div class="auth-links">
+            <a (click)="setMode('login')" class="auth-toggle" role="button" tabindex="0">
+                ¿Ya tienes cuenta? Entra aquí
+            </a>
+        </div>
+    </ng-container>
+
+    <!-- MODO FORGOT PASSWORD - Solicitar token -->
+    <ng-container *ngIf="authMode === 'forgot-password'">
+        <h2>Recuperar contraseña</h2>
+        <p class="auth-subtitle">Te enviaremos un email con instrucciones para recuperar tu contraseña</p>
+
+        <form (ngSubmit)="onSubmit()" class="auth-form">
+            <input type="email" name="email" [(ngModel)]="email" placeholder="Ingresa tu email" required
+                [disabled]="isLoading">
+
+            <button type="submit" [disabled]="isLoading">
+                {{ isLoading ? 'Enviando...' : 'Enviar instrucciones' }}
+            </button>
+        </form>
+
+        <p *ngIf="mensaje" class="auth-message" [ngClass]="{'success': mensaje.includes('✓')}">{{ mensaje }}</p>
+
+        <div class="auth-links">
+            <a (click)="setMode('login')" class="auth-toggle" role="button" tabindex="0">
+                Volver a login
+            </a>
+        </div>
+    </ng-container>
+
+    <!-- MODO RESET PASSWORD - Ingresar token y nueva contraseña -->
+    <ng-container *ngIf="authMode === 'reset-password'">
+        <h2>Cambiar contraseña</h2>
+        <p class="auth-subtitle">Ingresa el token que recibiste por email y tu nueva contraseña</p>
+
+        <form (ngSubmit)="onSubmit()" class="auth-form">
+            <input type="text" name="token" [(ngModel)]="resetToken" placeholder="Token de recuperación (del email)"
+                required [disabled]="isLoading">
+
+            <input type="password" name="nuevaPassword" [(ngModel)]="nuevaPassword" placeholder="Nueva contraseña"
+                required [disabled]="isLoading">
+
+            <input type="password" name="confirmarPassword" [(ngModel)]="confirmarPassword"
+                placeholder="Confirmar nueva contraseña" required [disabled]="isLoading">
+
+            <button type="submit" [disabled]="isLoading">
+                {{ isLoading ? 'Actualizando...' : 'Cambiar contraseña' }}
+            </button>
+        </form>
+
+        <p *ngIf="mensaje" class="auth-message"
+            [ngClass]="{'success': mensaje.includes('✓'), 'error': mensaje.includes('Error')}">{{ mensaje }}</p>
+
+        <div class="auth-links">
+            <a (click)="setMode('login')" class="auth-toggle" role="button" tabindex="0">
+                Volver a login
+            </a>
+            <a (click)="setMode('forgot-password')" class="auth-forgot" role="button" tabindex="0">
+                Solicitar otro token
+            </a>
+        </div>
+    </ng-container>
 </div>
