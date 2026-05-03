@@ -79,30 +79,29 @@ public class ReservasService {
     }
 
     public Token getResumenCompra(String tokenValor, String userToken) {
+        // 1. Buscamos el carrito
         Token token = this.tokenDao.findById(tokenValor).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Sesión expirada"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Reserva no encontrada"));
 
+        // 2. Validamos el token de usuario SIEMPRE que venga algo
         String emailActual = null;
-
-        // Obtener email del usuario actual si tiene userToken válido
-        if (userToken != null && !userToken.isEmpty() && !userToken.equals("null")
-                && !userToken.equals("undefined")) {
+        if (userToken != null && !userToken.isEmpty() && !userToken.equals("null") && !userToken.equals("undefined")) {
+            // Aquí es donde se hace la llamada al otro backend
             emailActual = usuariosService.checkToken(userToken);
         }
 
-        // CASO 1: Si el token no tiene emailUsuario asignado, asignarlo
-        if (token.getEmailUsuario() == null) {
-            if (emailActual != null) {
-                token.setEmailUsuario(emailActual);
-                this.tokenDao.save(token);
-                System.out.println("[RESERVAS] Token vinculado a usuario: " + emailActual);
+        // --- LÓGICA DE CONTROL DE ACCESO ---
+        if (token.getEmailUsuario() != null) {
+            if (emailActual == null) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Inicia sesión para ver este carrito");
             }
-        }
-        // CASO 2: Si el token YA tiene emailUsuario, validar que sea el mismo usuario
-        else if (emailActual != null && !emailActual.equals(token.getEmailUsuario())) {
-            // El usuario intenta acceder a un token de otro usuario
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Este carrito pertenece a otro usuario: " + token.getEmailUsuario());
+            if (!emailActual.equals(token.getEmailUsuario())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Este carrito pertenece a otro usuario");
+            }
+        } else if (emailActual != null) {
+            // Vinculación automática si el carrito era anónimo
+            token.setEmailUsuario(emailActual);
+            this.tokenDao.save(token);
         }
 
         return token;

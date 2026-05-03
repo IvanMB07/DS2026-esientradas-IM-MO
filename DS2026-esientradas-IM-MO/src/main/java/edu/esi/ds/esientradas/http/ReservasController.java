@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import edu.esi.ds.esientradas.model.Token;
 import edu.esi.ds.esientradas.services.ReservasService;
+import edu.esi.ds.esientradas.services.UsuariosService;
 
 @RestController
 @CrossOrigin(origins = "*")
@@ -14,6 +15,8 @@ public class ReservasController {
 
     @Autowired
     private ReservasService service;
+    @Autowired
+    private UsuariosService usuariosService;
 
     @PostMapping("/seleccionar")
     public String seleccionar(@RequestBody Map<String, Object> payload) {
@@ -36,6 +39,8 @@ public class ReservasController {
     @GetMapping("/resumen")
     public Object getResumen(@RequestParam String compraToken,
             @RequestParam(required = false) String userToken) {
+        // IMPORTANTE: No valides aquí el token, deja que el Service lo haga
+        // para que la lógica de "Usuario Anónimo" (Escenario B) funcione.
         return this.service.getResumenCompra(compraToken, userToken);
     }
 
