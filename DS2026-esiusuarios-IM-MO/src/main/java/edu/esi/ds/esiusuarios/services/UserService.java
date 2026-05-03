@@ -78,18 +78,26 @@ public class UserService {
     }
 
     // Cambiado a 'registrar' para coincidir con el Controller
-    public String registrar(String email, String password) {
-        System.out.println("REGISTRAR: Intentando crear usuario: " + email);
+    // 1. Añade esta constante al principio de la clase para definir la política
+    private static final String EMAIL_PATTERN = "^[A-Za-z0-9+_.-]+@(.+)$";
+    private static final String PASSWORD_PATTERN = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!])(?=\\S+$).{12,}$";
 
-        // SEGURIDAD: Verificamos si el usuario ya existe antes de crear otro
+    public String registrar(String email, String password) {
+        // 1. Validar Email
+        if (email == null || !email.matches(EMAIL_PATTERN)) {
+            throw new IllegalArgumentException("El formato del email no es válido.");
+        }
+
+        // 2. Validar Contraseña (ya lo tenemos del paso anterior)
+        if (password == null || !password.matches(PASSWORD_PATTERN)) {
+            throw new IllegalArgumentException("La contraseña no cumple los requisitos de robustez.");
+        }
+
         if (userDao.existsById(email)) {
-            System.out.println("REGISTRAR: ✗ Usuario ya existe");
             return null;
         }
 
         String encodedPassword = encoder.encode(password);
-
-        // Usamos el email como nombre por defecto si no nos pasan uno
         String defaultName = email.split("@")[0];
 
         User newUser = new User(defaultName, email, encodedPassword);
@@ -97,8 +105,7 @@ public class UserService {
         newUser.setToken(token);
 
         userDao.save(newUser);
-        System.out.println("REGISTRAR: ✓ Usuario creado con token: " + token.substring(0, 8) + "...");
-        return token; // Devolvemos el token para que el usuario ya esté "logueado"
+        return token;
     }
 
     public String checkToken(String token) {

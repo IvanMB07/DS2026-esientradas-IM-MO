@@ -48,22 +48,25 @@ public class UserController {
         String pwd2 = jso.optString("pwd2");
 
         if (email.isEmpty() || pwd1.isEmpty() || pwd2.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos de registro incompletos");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos incompletos");
         }
 
-        // Validación de seguridad: las contraseñas deben ser iguales
         if (!pwd1.equals(pwd2)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las contraseñas no coinciden");
         }
 
-        String token = this.service.registrar(email, pwd1);
-
-        // Si el servicio devuelve null es porque el email ya estaba en la BD
-        if (token == null) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "El usuario ya existe");
+        try {
+            String token = this.service.registrar(email, pwd1);
+            if (token == null) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "El usuario ya existe");
+            }
+            return token;
+        } catch (IllegalArgumentException e) {
+            // [Inferencia] Enviamos el mensaje específico (ej: "Formato de email inválido")
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor");
         }
-
-        return token;
     }
 
     @PostMapping("/logout")

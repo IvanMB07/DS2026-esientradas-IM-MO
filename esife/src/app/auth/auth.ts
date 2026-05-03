@@ -24,6 +24,9 @@ export class AuthComponent {
   // Modo actual de autenticación
   authMode: AuthMode = 'login';
 
+  // Control de visibilidad de contraseña
+  showPassword = false;
+
   // Campos para recuperación de contraseña
   resetToken = '';
   nuevaPassword = '';
@@ -36,6 +39,7 @@ export class AuthComponent {
     this.authMode = mode;
     this.limpiarFormulario();
     this.mensaje = '';
+    this.showPassword = false; // Resetear el ojo al cambiar de modo
   }
 
   private limpiarFormulario() {
@@ -47,6 +51,16 @@ export class AuthComponent {
     this.confirmarPassword = '';
   }
 
+  // VALIDACIONES PRIVADAS
+  private esEmailValido(email: string): boolean {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  }
+
+  private esPasswordRobusta(password: string): boolean {
+    // He añadido el punto (.) y otros símbolos a la lista de permitidos
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,}$/;
+    return regex.test(password);
+  }
   private redirigirPostLogin() {
     // Primero, intentar recuperar carritos pendientes del usuario
     this.auth.getCarritosUsuario().subscribe({
@@ -81,7 +95,7 @@ export class AuthComponent {
   // LOGIN
   onLoginSubmit() {
     if (!this.email || !this.pwd) {
-      this.mensaje = 'Por favor completa todos los campos';
+      this.mensaje = 'Error: Por favor completa todos los campos';
       return;
     }
 
@@ -89,7 +103,7 @@ export class AuthComponent {
     this.auth.login(this.email, this.pwd).subscribe({
       next: (token) => {
         this.auth.saveToken(token, this.email);
-        this.mensaje = '¡Bienvenido! Accediendo a su pedido...';
+        this.mensaje = '✓ ¡Bienvenido! Accediendo a su pedido...';
         setTimeout(() => this.redirigirPostLogin(), 1500);
       },
       error: (err) => {
@@ -102,12 +116,22 @@ export class AuthComponent {
   // REGISTER
   onRegisterSubmit() {
     if (!this.email || !this.pwd || !this.pwd2) {
-      this.mensaje = 'Por favor completa todos los campos';
+      this.mensaje = 'Error: Por favor completa todos los campos';
+      return;
+    }
+
+    if (!this.esEmailValido(this.email)) {
+      this.mensaje = 'Error: El formato del email no es válido (ejemplo@dominio.com)';
+      return;
+    }
+
+    if (!this.esPasswordRobusta(this.pwd)) {
+      this.mensaje = 'Error: La contraseña debe tener al menos 8 caracteres, incluir un número y un símbolo (@$!%*?&)';
       return;
     }
 
     if (this.pwd !== this.pwd2) {
-      this.mensaje = 'Las contraseñas no coinciden';
+      this.mensaje = 'Error: Las contraseñas no coinciden';
       return;
     }
 
@@ -115,20 +139,31 @@ export class AuthComponent {
     this.auth.registrar(this.email, this.pwd, this.pwd2).subscribe({
       next: (token) => {
         this.auth.saveToken(token, this.email);
-        this.mensaje = 'Cuenta creada con éxito. Redirigiendo...';
+        this.mensaje = '✓ Cuenta creada con éxito. Redirigiendo...';
         setTimeout(() => this.redirigirPostLogin(), 1500);
       },
       error: (err) => {
         this.isLoading = false;
-        this.mensaje = err.status === 409 ? 'El usuario ya existe' : 'Error en el registro';
+        if (err.status === 409) {
+          this.mensaje = 'Error: El usuario ya existe';
+        } else if (err.status === 422) {
+          this.mensaje = 'Error: ' + (err.error.message || 'La contraseña no cumple los requisitos del servidor');
+        } else {
+          this.mensaje = 'Error en el registro';
+        }
       }
     });
   }
 
-  // FORGOT PASSWORD - Solicitar token de recuperación
+  // FORGOT PASSWORD
   onForgotPasswordSubmit() {
     if (!this.email) {
-      this.mensaje = 'Por favor ingresa tu email';
+      this.mensaje = 'Error: Por favor ingresa tu email';
+      return;
+    }
+
+    if (!this.esEmailValido(this.email)) {
+      this.mensaje = 'Error: Ingresa un email con formato correcto';
       return;
     }
 
@@ -151,20 +186,20 @@ export class AuthComponent {
     });
   }
 
-  // RESET PASSWORD - Resetear contraseña con token
+  // RESET PASSWORD
   onResetPasswordSubmit() {
     if (!this.resetToken || !this.nuevaPassword || !this.confirmarPassword) {
-      this.mensaje = 'Por favor completa todos los campos';
+      this.mensaje = 'Error: Por favor completa todos los campos';
       return;
     }
 
     if (this.nuevaPassword !== this.confirmarPassword) {
-      this.mensaje = 'Las contraseñas nuevas no coinciden';
+      this.mensaje = 'Error: Las contraseñas nuevas no coinciden';
       return;
     }
 
-    if (this.nuevaPassword.length < 6) {
-      this.mensaje = 'La contraseña debe tener al menos 6 caracteres';
+    if (!this.esPasswordRobusta(this.nuevaPassword)) {
+      this.mensaje = 'Error: La nueva contraseña debe tener al menos 8 caracteres, un número y un símbolo';
       return;
     }
 
@@ -180,10 +215,10 @@ export class AuthComponent {
       },
       error: (err) => {
         this.isLoading = false;
-        if (err.status === 410) { // GONE - Token expirado
+        if (err.status === 410) {
           this.mensaje = 'Error: El token de recuperación ha expirado. Solicita uno nuevo.';
         } else {
-          this.mensaje = 'Error: No pudimos actualizar tu contraseña';
+          this.mensaje = 'Error: El token es inválido o no pudimos actualizar tu contraseña';
         }
       }
     });

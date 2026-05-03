@@ -25,17 +25,40 @@
     gap: 0.72rem;
 }
 
-.auth-form input,
-.auth-form button {
-    padding: 0.75rem;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.95rem;
+/* Contenedor para que el ojo flote sobre el input */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    width: 100%;
 }
 
-.auth-form input {
-    background: var(--background);
-    color: var(--text);
+/* Ajuste del input para que el texto no tape al ojo */
+.auth-form .password-wrapper input {
+    width: 100%;
+    padding-right: 45px;
+    /* Espacio para el símbolo */
+    box-sizing: border-box;
+}
+
+/* El símbolo del ojo */
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 1.1rem;
+    user-select: none;
+    z-index: 5;
+    transition: all 0.2s ease;
+    filter: grayscale(100%);
+    /* Lo hace ver como símbolo técnico, no emoji */
+    opacity: 0.6;
+}
+
+.password-toggle:hover {
+    opacity: 1;
+    filter: grayscale(0%);
 }
 
 .auth-form input:disabled {
@@ -45,12 +68,14 @@
 
 .auth-form button {
     margin-top: 0.2rem;
+    padding: 0.75rem;
     background: var(--primary);
     color: white;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
+    border-radius: 8px;
 }
 
 .auth-form button:hover:not(:disabled) {
@@ -69,6 +94,7 @@
     font-weight: 600;
     padding: 0.75rem;
     border-radius: 8px;
+    /* Estilos base para error */
     color: #d32f2f;
     background-color: rgba(211, 47, 47, 0.1);
     border-left: 3px solid #d32f2f;
@@ -77,13 +103,14 @@
 .auth-message.success {
     color: #2e7d32;
     background-color: rgba(46, 125, 50, 0.1);
-    border-left-color: #2e7d32;
+    border-left: 3px solid #2e7d32;
 }
 
+/* Clase explícita para error por si el ngClass la requiere */
 .auth-message.error {
     color: #d32f2f;
     background-color: rgba(211, 47, 47, 0.1);
-    border-left-color: #d32f2f;
+    border-left: 3px solid #d32f2f;
 }
 
 .auth-links {
