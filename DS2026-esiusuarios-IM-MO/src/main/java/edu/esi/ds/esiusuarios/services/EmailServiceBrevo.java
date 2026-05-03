@@ -6,6 +6,7 @@ import brevoModel.SendSmtpEmail;
 import brevoModel.SendSmtpEmailAttachment;
 import brevoModel.SendSmtpEmailSender;
 import brevoModel.SendSmtpEmailTo;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +15,9 @@ import java.util.Collections;
 @Service
 @Primary // <--- IMPORTANTE: Esto le dice a Spring que use este y NO el Falso
 public class EmailServiceBrevo extends EmailService {
+
+    @Value("${brevo.api.key:}")
+    private String brevoApiKey;
 
     @Override
     public void sendEmail(String destinatario, Object... params) {
@@ -30,11 +34,12 @@ public class EmailServiceBrevo extends EmailService {
         }
         // -------------------------------------------
 
-        // Sustituye por tu API Key real de Brevo
-        String apiKey = "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";
+        if (brevoApiKey == null || brevoApiKey.isBlank()) {
+            throw new IllegalStateException("brevo.api.key no configurada");
+        }
 
         TransactionalEmailsApi apiInstance = new TransactionalEmailsApi();
-        apiInstance.getApiClient().setApiKey(apiKey);
+        apiInstance.getApiClient().setApiKey(brevoApiKey);
 
         SendSmtpEmail sendSmtpEmail = new SendSmtpEmail();
         sendSmtpEmail.setSubject(asunto);
