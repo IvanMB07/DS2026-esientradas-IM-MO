@@ -9,7 +9,7 @@ import edu.esi.ds.esientradas.services.ReservasService;
 import edu.esi.ds.esientradas.services.UsuariosService;
 
 @RestController
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("/reservas")
 public class ReservasController {
 

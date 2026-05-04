@@ -70,9 +70,46 @@ public class ReservasService {
 
     @Transactional
     public void cancelarEntrada(Long idEntrada, String compraToken, String userToken) {
+        // 1. Obtener el token de compra
         Token token = this.tokenDao.findById(compraToken).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token no válido"));
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token de compra no válido"));
 
+        // 2. Validar identidad del usuario (checkToken extrae el email del token de
+        // sesión)
+        String emailActual = null;
+        if (userToken != null && !userToken.isEmpty() && !userToken.equals("null") && !userToken.equals("undefined")) {
+            emailActual = usuariosService.checkToken(userToken);
+        }
+
+        // 3. [SEGURIDAD] Verificar que el usuario tiene permiso para modificar este
+        // token
+        // Principio: "Record Ownership" - el usuario solo puede modificar sus propias
+        // entradas
+        if (token.getEmailUsuario() != null) {
+            // El token está vinculado a un email específico (usuario registrado)
+            if (emailActual == null) {
+                // Intenta cancelar un token de otro usuario sin estar autenticado
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                        "Debes iniciar sesión para cancelar entradas de una compra existente");
+            }
+            if (!emailActual.equals(token.getEmailUsuario())) {
+                // El usuario autenticado no es el dueño del token - ATAQUE IDOR BLOQUEADO
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "No tienes permiso para cancelar entradas de otro usuario");
+            }
+        }
+        // Si token.getEmailUsuario() es null (carrito anónimo), permitir cancelación
+
+        // 4. Verificar que la entrada pertenece a este token
+        Entrada entrada = this.entradaDao.findById(idEntrada).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
+
+        if (!token.getEntradas().contains(entrada)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Esta entrada no pertenece a tu carrito");
+        }
+
+        // 5. Cancelar la entrada (ahora validada como segura)
         token.getEntradas().removeIf(e -> e.getId().equals(idEntrada));
         this.tokenDao.save(token);
         this.entradaDao.updateEstado(idEntrada, Estado.DISPONIBLE);
@@ -152,32 +189,6 @@ public class ReservasService {
         List<Token> carritos = this.tokenDao.findByEmailUsuarioOrderByHoraDesc(emailUsuario);
 
         System.out.println("[RESERVAS] Carritos vinculados a " + emailUsuario + ": " + carritos.size());
-
-        // 2. Si no hay carritos vinculados, buscar carritos sin vinculación
-        // (emailUsuario = null)
-        // que probablemente el usuario creó antes de loguear
-        if (carritos.isEmpty()) {
-            System.out.println("[RESERVAS] Buscando carritos sin vinculación (emailUsuario = null)...");
-            List<Token> unboundTokens = this.tokenDao.findRecentUnboundTokens();
-
-            // Tomar el más reciente (primer elemento)
-            if (!unboundTokens.isEmpty()) {
-                Token tokenReciente = unboundTokens.get(0);
-
-                // Verificar que tenga entradas
-                if (tokenReciente.getEntradas() != null && !tokenReciente.getEntradas().isEmpty()) {
-                    // Vincularlo al usuario actual
-                    tokenReciente.setEmailUsuario(emailUsuario);
-                    this.tokenDao.save(tokenReciente);
-
-                    System.out.println("[RESERVAS] Token sin vinculación recuperado y vinculado a " + emailUsuario);
-                    System.out.println("[RESERVAS] Token: " + tokenReciente.getValor() + ", Entradas: "
-                            + tokenReciente.getEntradas().size());
-
-                    carritos = List.of(tokenReciente);
-                }
-            }
-        }
 
         // Filtrar solo los que tienen entradas
         List<Token> carritosConEntradas = carritos.stream()

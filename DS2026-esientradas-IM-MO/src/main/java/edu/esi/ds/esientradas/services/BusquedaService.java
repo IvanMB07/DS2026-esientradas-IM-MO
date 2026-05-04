@@ -1,6 +1,8 @@
 package edu.esi.ds.esientradas.services;
 
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -38,8 +40,10 @@ public class BusquedaService {
         return this.espectaculoDao.findByArtista(artista);
     }
 
-    public List<Entrada> getEntradas(Long espectaculoId) {
-        return this.entradaDao.findByEspectaculoId(espectaculoId);
+    public List<Map<String, Object>> getEntradas(Long espectaculoId) {
+        return this.entradaDao.findByEspectaculoId(espectaculoId).stream()
+                .map(this::toPublicEntryMap)
+                .toList();
     }
 
     public List<Espectaculo> getEspectaculos(Long idEscenario) {
@@ -62,6 +66,20 @@ public class BusquedaService {
                 ((Number) arr[1]).intValue(),
                 ((Number) arr[2]).intValue(),
                 ((Number) arr[3]).intValue());
+        return dto;
+    }
+
+    private Map<String, Object> toPublicEntryMap(Entrada entrada) {
+        Integer zona = null;
+        if (entrada instanceof edu.esi.ds.esientradas.model.DeZona deZona) {
+            zona = deZona.getZona();
+        }
+
+        Map<String, Object> dto = new LinkedHashMap<>();
+        dto.put("id", entrada.getId());
+        dto.put("precio", entrada.getPrecio());
+        dto.put("estado", entrada.getEstado());
+        dto.put("zona", zona);
         return dto;
     }
 

@@ -15,8 +15,7 @@ import edu.esi.ds.esiusuarios.dto.EmailRequest;
 import edu.esi.ds.esiusuarios.services.EmailService;
 import edu.esi.ds.esiusuarios.services.UserService;
 
-@CrossOrigin(origins = "*") // Permitir CORS para todas las fuentes (ajusta según tus necesidades de
-                            // seguridad)
+@CrossOrigin(origins = "http://localhost:4200") // Limitado al frontend Angular local.
 @RestController
 @RequestMapping("/external")
 public class ExternalController {

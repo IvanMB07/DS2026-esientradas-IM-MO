@@ -1,6 +1,7 @@
 package edu.esi.ds.esientradas.http;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -12,26 +13,25 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.esi.ds.esientradas.dto.DtoEntradas;
 import edu.esi.ds.esientradas.dto.DtoEspectaculo;
-import edu.esi.ds.esientradas.model.Entrada;
 import edu.esi.ds.esientradas.model.Escenario;
 import edu.esi.ds.esientradas.model.Espectaculo;
 import edu.esi.ds.esientradas.services.BusquedaService;
 
 @RestController
 @RequestMapping("/busqueda")
-@CrossOrigin(origins = "*") // Con esto permitimos las peticiones de cualquier sitio.
+@CrossOrigin(origins = "http://localhost:4200") // Limitado al frontend Angular local.
 public class BusquedaController {
 
     @Autowired
     private BusquedaService service;
 
     @GetMapping("/getEntradas")
-    public List<Entrada> getEntradas(@RequestParam Long espectaculoId) {
+    public List<Map<String, Object>> getEntradas(@RequestParam Long espectaculoId) {
         return this.service.getEntradas(espectaculoId);
     }
 
     @GetMapping("/getNumeroDeEntradas")
-    public List<Entrada> getNumeroDeEntradas(@RequestParam Long espectaculoId) {
+    public List<Map<String, Object>> getNumeroDeEntradas(@RequestParam Long espectaculoId) {
         return this.service.getEntradas(espectaculoId);
     }
 

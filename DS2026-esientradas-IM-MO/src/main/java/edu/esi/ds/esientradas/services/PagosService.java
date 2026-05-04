@@ -69,23 +69,49 @@ public class PagosService {
 
     @Transactional
     public void confirmarPago(String tokenReserva, String tokenUsuario) {
-        // 1. Obtener email (Comunicación Backend -> Backend)
-        String email = usuariosService.checkToken(tokenUsuario);
+        if (tokenReserva == null || tokenReserva.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token de reserva no válido");
+        }
+        if (tokenUsuario == null || tokenUsuario.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token de usuario no válido");
+        }
 
-        // 2. Lógica de BD (Entradas a VENDIDA)
-        Token token = tokenDao.findById(tokenReserva).get();
+        // 1. Obtener email autenticado desde el backend de usuarios
+        String emailActual = usuariosService.checkToken(tokenUsuario);
+        if (emailActual == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token de usuario expirado o inválido");
+        }
+
+        // 2. Recuperar la reserva y validar propiedad antes de tocar la BD
+        Token token = tokenDao.findById(tokenReserva).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Token de reserva no válido"));
+
+        if (token.getEmailUsuario() == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "La reserva no está vinculada a un usuario autenticado");
+        }
+        if (!emailActual.equals(token.getEmailUsuario())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "No tienes permiso para confirmar una compra de otro usuario");
+        }
+
+        if (token.getEntradas() == null || token.getEntradas().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La reserva no contiene entradas");
+        }
+
+        // 3. Lógica de BD (Entradas a VENDIDA)
         token.getEntradas().forEach(e -> e.setEstado(Estado.VENDIDA));
 
-        // 3. Generar PDF (PdfService local de esientradas)
-        byte[] pdf = pdfService.generarFactura(email, token.getEntradas());
+        // 4. Generar PDF (PdfService local de esientradas)
+        byte[] pdf = pdfService.generarFactura(emailActual, token.getEntradas());
 
-        // 4. Guardar registro (PdfDao local)
+        // 5. Guardar registro (PdfDao local)
         PdfEntidad reg = new PdfEntidad();
-        reg.setEmailUsuario(email);
+        reg.setEmailUsuario(emailActual);
         reg.setContenido(pdf);
         pdfDao.save(reg);
 
-        // 5. ENVIAR AL OTRO BACKEND PARA EL EMAIL
-        usuariosService.enviarPdfAExterno(email, pdf);
+        // 6. ENVIAR AL OTRO BACKEND PARA EL EMAIL
+        usuariosService.enviarPdfAExterno(emailActual, pdf);
     }
 }

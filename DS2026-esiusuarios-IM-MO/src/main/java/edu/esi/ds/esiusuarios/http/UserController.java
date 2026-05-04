@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import edu.esi.ds.esiusuarios.services.UserService;
 
-@CrossOrigin(origins = "*") // Permitir CORS para todas las fuentes (ajusta según tus necesidades de
-                            // seguridad)
+@CrossOrigin(origins = "http://localhost:4200") // Limitado al frontend Angular local.
 @RestController
 @RequestMapping("/users")
 public class UserController {
@@ -96,7 +96,14 @@ public class UserController {
     }
 
     @PostMapping("/reset-password")
-    public void resetPassword(@RequestBody Map<String, String> body) {
+    public void resetPassword(@RequestBody Map<String, String> body,
+            @RequestHeader(value = "Origin", required = false) String origin,
+            @RequestHeader(value = "Referer", required = false) String referer) {
+        if (!isTrustedFrontendRequest(origin, referer)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Origen no permitido para resetear la contraseña");
+        }
+
         JSONObject jso = new JSONObject(body);
         String token = jso.optString("token");
         String newPwd = jso.optString("pwd");
@@ -109,6 +116,14 @@ public class UserController {
         if (!exito) {
             throw new ResponseStatusException(HttpStatus.GONE, "Token inválido o caducado");
         }
+    }
+
+    private boolean isTrustedFrontendRequest(String origin, String referer) {
+        String trustedOrigin = "http://localhost:4200";
+        if (origin != null && origin.equalsIgnoreCase(trustedOrigin)) {
+            return true;
+        }
+        return referer != null && referer.startsWith(trustedOrigin);
     }
 
     @DeleteMapping("/cancel")
