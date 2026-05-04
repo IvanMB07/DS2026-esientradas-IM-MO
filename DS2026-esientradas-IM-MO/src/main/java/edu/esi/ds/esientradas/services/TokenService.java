@@ -1,11 +1,12 @@
 package edu.esi.ds.esientradas.services;
 
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
 
+import edu.esi.ds.esientradas.dao.EntradaDao; // Necesitamos esto para guardar cambios
 import edu.esi.ds.esientradas.dao.TokenDao;
 import edu.esi.ds.esientradas.model.Estado;
 import edu.esi.ds.esientradas.model.Entrada;
@@ -17,25 +18,25 @@ public class TokenService {
     @Autowired
     private TokenDao tokenDao;
 
-    // Ajustado a 15 minutos según tu requerimiento (15 * 60 * 1000)
-    private static final long EXPIRATION_TIME_MILLIS = 15 * 60 * 1000;
+    @Autowired
+    private EntradaDao entradaDao; // Inyectamos el DAO de entradas
 
-    @jakarta.transaction.Transactional // Asegura que si algo falla, no se borre el token a medias
+    // Tiempo de expiración (10 minutos como pediste: 10 * 60 * 1000)
+    private static final long EXPIRATION_TIME_MILLIS = 10 * 60 * 1000;
+
+    @Transactional
     public void liberarEntradasExpiredToken(Token token) {
         if (token != null && token.getEntradas() != null) {
-            System.out.println("[TOKEN SERVICE] Liberando " + token.getEntradas().size() + " entradas...");
+            System.out.println("[TOKEN SERVICE] Expirado token: " + token.getValor() + ". Liberando entradas...");
 
             for (Entrada entrada : token.getEntradas()) {
-                // Verificamos RESERVADA (según tu modelo)
                 if (entrada.getEstado() == Estado.RESERVADA) {
                     entrada.setEstado(Estado.DISPONIBLE);
-                    // Importante: No necesitas hacer save(entrada) si tienes CascadeType.ALL
-                    // o si la entidad está gestionada por la transacción.
+                    entradaDao.save(entrada); // Aseguramos que el cambio se guarde en MySQL
                 }
             }
 
-            // Limpiamos la lista de entradas del token antes de borrarlo para evitar
-            // conflictos de FK
+            // Limpiamos y borramos el token
             token.getEntradas().clear();
             tokenDao.delete(token);
         }
@@ -43,16 +44,14 @@ public class TokenService {
 
     @Scheduled(fixedRate = 60000) // Se ejecuta cada minuto
     public void liberarEntradasReservadas() {
-        long ahora = System.currentTimeMillis();
-        List<Token> todosLosTokens = tokenDao.findAll();
+        // Calculamos el tiempo límite de forma eficiente
+        long tiempoLimite = System.currentTimeMillis() - EXPIRATION_TIME_MILLIS;
 
-        for (Token token : todosLosTokens) {
-            // El campo 'hora' viene de Token.java
-            long tiempoDesdeCreacion = ahora - token.getHora();
+        // OPTIMIZACIÓN: Usamos el método que añadimos al TokenDao[cite: 3]
+        List<Token> tokensCaducados = tokenDao.findByHoraBefore(tiempoLimite);
 
-            if (tiempoDesdeCreacion > EXPIRATION_TIME_MILLIS) {
-                liberarEntradasExpiredToken(token);
-            }
+        for (Token token : tokensCaducados) {
+            liberarEntradasExpiredToken(token);
         }
     }
 }
