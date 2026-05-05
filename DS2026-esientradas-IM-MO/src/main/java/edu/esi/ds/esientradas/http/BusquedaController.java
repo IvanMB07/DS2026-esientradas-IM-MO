@@ -61,6 +61,11 @@ public class BusquedaController {
         return dtos;
     }
 
+    @GetMapping("/test-error")
+    public void test() {
+        throw new RuntimeException("Error de prueba OWASP");
+    }
+
     @GetMapping("/getEspectaculos/{idEscenario}")
     public List<DtoEspectaculo> getEspectaculos(@PathVariable Long idEscenario) {
         List<Espectaculo> espectaculos = this.service.getEspectaculos(idEscenario);
