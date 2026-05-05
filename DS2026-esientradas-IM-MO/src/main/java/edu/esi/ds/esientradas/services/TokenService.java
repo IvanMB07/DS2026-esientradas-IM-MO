@@ -22,7 +22,7 @@ public class TokenService {
     private EntradaDao entradaDao; // Inyectamos el DAO de entradas
 
     // Tiempo de expiración (10 minutos como pediste: 10 * 60 * 1000)
-    private static final long EXPIRATION_TIME_MILLIS = 10 * 60 * 1000;
+    private static final long EXPIRATION_TIME_MILLIS = 15000;
 
     @Transactional
     public void liberarEntradasExpiredToken(Token token) {
