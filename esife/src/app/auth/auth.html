@@ -10,9 +10,9 @@
             <div class="password-wrapper">
                 <input [type]="showPassword ? 'text' : 'password'" name="pwd" [(ngModel)]="pwd" placeholder="Contraseña"
                     required [disabled]="isLoading">
-                <!-- Cambiado a &#8995; para el estado oculto -->
+                <!-- Cambiado a ⌣ para el estado oculto -->
                 <span class="password-toggle" (click)="showPassword = !showPassword" role="button"
-                    [innerHTML]="showPassword ? '&#128065;' : '&#8995;'">
+                    [innerHTML]="showPassword ? '👁' : '⌣'">
                 </span>
             </div>
 
@@ -46,7 +46,7 @@
                 <input [type]="showPassword ? 'text' : 'password'" name="pwd" [(ngModel)]="pwd" placeholder="Contraseña"
                     required [disabled]="isLoading">
                 <span class="password-toggle" (click)="showPassword = !showPassword" role="button"
-                    [innerHTML]="showPassword ? '&#128065;' : '&#8995;'">
+                    [innerHTML]="showPassword ? '👁' : '⌣'">
                 </span>
             </div>
 
@@ -107,7 +107,7 @@
                 <input [type]="showPassword ? 'text' : 'password'" name="pwd" [(ngModel)]="pwd" placeholder="Contraseña"
                     required [disabled]="isLoading">
                 <span class="password-toggle" (click)="showPassword = !showPassword" role="button"
-                    [innerHTML]="showPassword ? '&#128065;' : '&#8995;'">
+                    [innerHTML]="showPassword ? '👁' : '⌣'">
                 </span>
             </div>
 
