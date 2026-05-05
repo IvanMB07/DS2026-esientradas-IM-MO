@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { EspectaculosService } from '../espectaculos';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { Auth } from '../auth'; // Importación vital para verificar identidad
+import { Auth } from '../auth';
 
 @Component({
   selector: 'app-espectaculos',
@@ -13,12 +13,13 @@ import { Auth } from '../auth'; // Importación vital para verificar identidad
   styleUrl: './espectaculos.css',
 })
 export class Espectaculos implements OnInit {
-  escenarios: any = [];
+
+  escenarios: any[] = [];
   entradasSeleccionadas: any[] = [];
 
   constructor(
     private espectaculosService: EspectaculosService,
-    private auth: Auth, // Inyectamos el servicio de autenticación
+    private auth: Auth,
     private router: Router,
     private http: HttpClient
   ) { }
@@ -43,48 +44,55 @@ export class Espectaculos implements OnInit {
 
   ngOnInit() {
     this.entradasSeleccionadas = this.getCarrito();
+
     const compraToken = this.getCompraToken();
     const userToken = this.auth.getToken();
 
-    if (compraToken) {
-      // Construir URL con ambos tokens
-      let url = `http://localhost:8080/reservas/resumen?compraToken=${compraToken}`;
-      if (userToken) {
-        url += `&userToken=${userToken}`;
-      }
+    if (!compraToken) return;
 
-      this.http.get<any>(url)
-        .subscribe({
-          next: (res) => {
-            const entradasBackend = res.entradas || [];
-            this.entradasSeleccionadas = entradasBackend.map((entrada: any) => {
-              const entradaGuardada = this.entradasSeleccionadas.find((item: any) => item.id === entrada.id);
-              return { ...entrada, espectaculo: entrada.espectaculo || entradaGuardada?.espectaculo };
-            });
-            this.saveCarrito(this.entradasSeleccionadas);
-          },
-          error: () => {
-            this.saveCompraToken('');
-            this.saveCarrito([]);
-          }
+    let url = `http://localhost:8080/reservas/resumen?compraToken=${compraToken}`;
+    if (userToken) url += `&userToken=${userToken}`;
+
+    this.http.get<any>(url).subscribe({
+      next: (res) => {
+        const entradasBackend = res.entradas || [];
+
+        this.entradasSeleccionadas = entradasBackend.map((entrada: any) => {
+          const entradaGuardada = this.entradasSeleccionadas.find(e => e.id === entrada.id);
+          return {
+            ...entrada,
+            espectaculo: entrada.espectaculo || entradaGuardada?.espectaculo
+          };
         });
-    }
+
+        this.saveCarrito(this.entradasSeleccionadas);
+      },
+      error: () => {
+        this.saveCompraToken('');
+        this.saveCarrito([]);
+      }
+    });
   }
 
   getEscenarios() {
-    if (this.escenarios && this.escenarios.length > 0) {
+    if (this.escenarios.length > 0) {
       this.escenarios = [];
       return;
     }
-    this.espectaculosService.getEscenarios().subscribe(response => this.escenarios = response);
+
+    // 🔧 FIX línea 99
+    this.espectaculosService.getEscenarios()
+      .subscribe((res: any) => this.escenarios = res);
   }
 
   getEspectaculos(escenario: any) {
-    if (escenario.espectaculos && escenario.espectaculos.length > 0) {
+    if (escenario.espectaculos?.length) {
       escenario.espectaculos = [];
       return;
     }
-    this.espectaculosService.getEspectaculos(escenario).subscribe(response => escenario.espectaculos = response);
+
+    this.espectaculosService.getEspectaculos(escenario)
+      .subscribe((res: any) => escenario.espectaculos = res);
   }
 
   getNumeroDeEntradas(espectaculo: any) {
@@ -93,10 +101,14 @@ export class Espectaculos implements OnInit {
       espectaculo.resumen = null;
       return;
     }
-    this.espectaculosService.getNumeroDeEntradasComoDto(espectaculo).subscribe(res => espectaculo.resumen = res);
-    this.espectaculosService.getNumeroDeEntradas(espectaculo).subscribe((entradas: any) => {
+
+    this.espectaculosService.getNumeroDeEntradasComoDto(espectaculo)
+      .subscribe((res: any) => espectaculo.resumen = res);
+
+    this.espectaculosService.getNumeroDeEntradas(espectaculo).subscribe((entradas: any[]) => {
       espectaculo.entradasAgrupadas = entradas.reduce((acc: any, entrada: any) => {
         const grupo = entrada.zona ? `Zona: ${entrada.zona}` : 'Asientos Numerados';
+
         if (!acc[grupo]) acc[grupo] = [];
         acc[grupo].push(entrada);
         return acc;
@@ -106,31 +118,35 @@ export class Espectaculos implements OnInit {
 
   toggleSeleccion(espectaculo: any, entrada: any) {
     const compraToken = this.getCompraToken();
-    const userToken = this.auth.getToken(); // Usamos el método estricto del servicio
+    const userToken = this.auth.getToken();
+
     const index = this.entradasSeleccionadas.findIndex(e => e.id === entrada.id);
 
     const entradaConEspectaculo = {
       ...entrada,
-      espectaculo: { id: espectaculo.id, artista: espectaculo.artista, fecha: espectaculo.fecha, nombre: espectaculo.nombre }
+      espectaculo: {
+        id: espectaculo.id,
+        artista: espectaculo.artista,
+        fecha: espectaculo.fecha,
+        nombre: espectaculo.nombre
+      }
     };
 
     if (index !== -1) {
       this.http.post('http://localhost:8080/reservas/cancelar', {
         idEntrada: entrada.id.toString(),
-        compraToken: compraToken,
-        userToken: userToken
-      }).subscribe({
-        next: () => {
-          entrada.estado = 'DISPONIBLE';
-          this.entradasSeleccionadas.splice(index, 1);
-          this.saveCarrito(this.entradasSeleccionadas);
-        }
+        compraToken,
+        userToken
+      }).subscribe(() => {
+        entrada.estado = 'DISPONIBLE';
+        this.entradasSeleccionadas.splice(index, 1);
+        this.saveCarrito(this.entradasSeleccionadas);
       });
     } else {
       this.http.post('http://localhost:8080/reservas/seleccionar', {
         idEntrada: entrada.id.toString(),
-        compraToken: compraToken,
-        userToken: userToken
+        compraToken,
+        userToken
       }, { responseType: 'text' }).subscribe({
         next: (nuevoToken: string) => {
           this.saveCompraToken(nuevoToken);
@@ -138,7 +154,8 @@ export class Espectaculos implements OnInit {
           this.entradasSeleccionadas.push(entradaConEspectaculo);
           this.saveCarrito(this.entradasSeleccionadas);
         },
-        error: (err: any) => alert("No se pudo reservar: " + (err.error || "No disponible"))
+        error: (err) =>
+          alert("No se pudo reservar: " + (err.error || "No disponible"))
       });
     }
   }
@@ -153,6 +170,7 @@ export class Espectaculos implements OnInit {
 
   irAComprar() {
     const token = this.getCompraToken();
+
     if (!token || this.entradasSeleccionadas.length === 0) {
       alert("Selecciona al menos una entrada");
       return;
@@ -160,14 +178,8 @@ export class Espectaculos implements OnInit {
 
     this.saveCarrito(this.entradasSeleccionadas);
 
-    // COMPROBACIÓN CRÍTICA: ¿El usuario es real o anónimo?
     const usuarioIdentificado = this.auth.getToken();
 
-    if (usuarioIdentificado) {
-      this.router.navigate(['/comprar']);
-    } else {
-      // Si es anónimo, le obligamos a pasar por el login
-      this.router.navigate(['/auth']);
-    }
+    this.router.navigate([usuarioIdentificado ? '/comprar' : '/auth']);
   }
 }

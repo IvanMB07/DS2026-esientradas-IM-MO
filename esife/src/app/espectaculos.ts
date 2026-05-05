@@ -5,29 +5,41 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class EspectaculosService {
-  // El constructor inyecta la herramienta para hacer peticiones HTTP
+
   constructor(private http: HttpClient) { }
 
   getEscenarios() {
-    return this.http.get('http://localhost:8080/busqueda/getEscenarios');
+    return this.http.get<any[]>('http://localhost:8080/busqueda/getEscenarios');
   }
 
   getEspectaculos(escenario: any) {
-    return this.http.get(`http://localhost:8080/busqueda/getEspectaculos/${escenario.id}`);
+    return this.http.get<any[]>(
+      `http://localhost:8080/busqueda/getEspectaculos/${escenario.id}`
+    );
   }
 
   getNumeroDeEntradas(espectaculo: any) {
-    return this.http.get(`http://localhost:8080/busqueda/getNumeroDeEntradas?espectaculoId=${espectaculo.id}`);
+    return this.http.get<any[]>(
+      `http://localhost:8080/busqueda/getNumeroDeEntradas?espectaculoId=${espectaculo.id}`
+    );
   }
 
   getEntradasLibres(espectaculo: any) {
-    return this.http.get(`http://localhost:8080/busqueda/getEntradasLibres?espectaculoId=${espectaculo.id}`);
+    return this.http.get<any>(
+      `http://localhost:8080/busqueda/getEntradasLibres?espectaculoId=${espectaculo.id}`
+    );
   }
 
   getNumeroDeEntradasComoDto(espectaculo: any) {
-    return this.http.get(`http://localhost:8080/busqueda/getNumeroDeEntradasComoDto?espectaculoId=${espectaculo.id}`);
+    return this.http.get<any>(
+      `http://localhost:8080/busqueda/getNumeroDeEntradasComoDto?espectaculoId=${espectaculo.id}`
+    );
   }
+
   getToken() {
-    return this.http.get('http://localhost:8080/auth/getToken', { withCredentials: true });
+    return this.http.get<any>(
+      'http://localhost:8080/auth/getToken',
+      { withCredentials: true }
+    );
   }
 }
