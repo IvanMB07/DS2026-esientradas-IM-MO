@@ -23,7 +23,7 @@
                         <div *ngFor="let zona of espectaculo.entradasAgrupadas | keyvalue" class="zona-bloque">
                             <h4>{{ zona.key }}</h4>
                             <div class="butacas-grid">
-                                <div *ngFor="let entrada of zona.value" class="entrada-item" [ngClass]="{
+                                <div *ngFor="let entrada of $any(zona.value)" class="entrada-item" [ngClass]="{
                                         'seleccionada': estaSeleccionada(entrada), 
                                         'ocupada': entrada.estado === 'RESERVADA' && !estaSeleccionada(entrada),
                                         'vendida': entrada.estado === 'VENDIDA',
@@ -31,7 +31,8 @@
                                     }"
                                     (click)="entrada.estado === 'DISPONIBLE' || estaSeleccionada(entrada) ? toggleSeleccion(espectaculo, entrada) : null">
                                     <span class="label">
-                                        {{ entrada.zona ? 'Ticket' : 'F:'+entrada.fila+' P:'+entrada.columna }}
+                                        {{ zona.key === 'Asientos Numerados' ? 'F:' + entrada.fila + ' C:' +
+                                        (entrada.columna || entrada.numero) : 'Ticket ' + entrada.id }}
                                     </span>
                                     <span class="precio">{{ entrada.precio/100 | currency:'EUR' }}</span>
                                 </div>

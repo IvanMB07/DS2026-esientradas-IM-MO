@@ -1,6 +1,7 @@
 package edu.esi.ds.esientradas.services;
 
 import java.util.List;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -12,10 +13,12 @@ import edu.esi.ds.esientradas.dao.EntradaDao;
 import edu.esi.ds.esientradas.dao.EscenarioDao;
 import edu.esi.ds.esientradas.dao.EspectaculoDao;
 import edu.esi.ds.esientradas.dto.DtoEntradas;
+import edu.esi.ds.esientradas.model.DeZona;
 import edu.esi.ds.esientradas.model.Entrada;
 import edu.esi.ds.esientradas.model.Escenario;
 import edu.esi.ds.esientradas.model.Espectaculo;
 import edu.esi.ds.esientradas.model.Estado;
+import edu.esi.ds.esientradas.model.Precisa;
 
 @Service
 public class BusquedaService {
@@ -70,17 +73,20 @@ public class BusquedaService {
     }
 
     private Map<String, Object> toPublicEntryMap(Entrada entrada) {
-        Integer zona = null;
-        if (entrada instanceof edu.esi.ds.esientradas.model.DeZona deZona) {
-            zona = deZona.getZona();
+        Map<String, Object> map = new HashMap<>();
+        map.put("id", entrada.getId());
+        map.put("precio", entrada.getPrecio());
+        map.put("estado", entrada.getEstado());
+
+        if (entrada instanceof DeZona ez) {
+            map.put("zona", ez.getZona());
+        } else if (entrada instanceof Precisa ep) {
+            map.put("fila", ep.getFila());
+            map.put("columna", ep.getColumna());
+            map.put("planta", ep.getPlanta());
         }
 
-        Map<String, Object> dto = new LinkedHashMap<>();
-        dto.put("id", entrada.getId());
-        dto.put("precio", entrada.getPrecio());
-        dto.put("estado", entrada.getEstado());
-        dto.put("zona", zona);
-        return dto;
+        return map;
     }
 
 }
