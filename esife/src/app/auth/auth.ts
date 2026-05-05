@@ -56,11 +56,13 @@ export class AuthComponent {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
+  // AuthComponent.ts
   private esPasswordRobusta(password: string): boolean {
-    // He añadido el punto (.) y otros símbolos a la lista de permitidos
-    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&._-])[A-Za-z\d@$!%*?&._-]{8,}$/;
+    // Debe coincidir exactamente con el Backend para evitar confusiones
+    const regex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!._-])(?=\S+$).{8,}$/;
     return regex.test(password);
   }
+
   private redirigirPostLogin() {
     // Primero, intentar recuperar carritos pendientes del usuario
     this.auth.getCarritosUsuario().subscribe({
