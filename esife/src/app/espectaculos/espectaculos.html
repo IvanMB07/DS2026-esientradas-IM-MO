@@ -1,13 +1,24 @@
 <section class="espectaculos-view">
     <div class="espectaculos-header">
         <h1>Cartelera de Espectáculos</h1>
-        <button type="button" (click)="getEscenarios()">
-            {{ escenarios.length > 0 ? 'Cerrar' : 'Ver escenarios' }}
-        </button>
+        <div class="search-inline">
+            <input type="text" placeholder="Buscar por artista/escenario" [(ngModel)]="searchQuery" (input)="onSearch()"
+                (keyup.enter)="onSearch()" />
+            <input type="date" [(ngModel)]="searchDate" />
+            <button type="button" (click)="onSearch()">🔍</button>
+            <button type="button" (click)="clearSearch()">✖️</button>
+        </div>
+
+        <!-- Removed 'Ver escenarios / Cerrar' toggle button for simpler UI -->
+    </div>
+
+    <div class="search-results" *ngIf="searchQuery.trim() || searchDate">
+        <h2>Resultados filtrados</h2>
+        <p *ngIf="escenariosFiltrados.length === 0" class="empty-state">No hay resultados con ese filtro.</p>
     </div>
 
     <ol class="escenarios-list">
-        <li *ngFor="let escenario of escenarios" class="escenario-item">
+        <li *ngFor="let escenario of escenariosFiltrados" class="escenario-item">
             <h3 class="interactive" (click)="getEspectaculos(escenario)">{{ escenario.nombre }}</h3>
 
             <ul *ngIf="escenario.espectaculos?.length > 0" class="espectaculos-list">

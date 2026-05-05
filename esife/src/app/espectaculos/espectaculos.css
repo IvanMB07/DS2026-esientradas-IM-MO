@@ -174,3 +174,47 @@
         text-align: center;
     }
 }
+
+/* --- Buscador Inline --- */
+.search-inline {
+    display: flex;
+    gap: 0.6rem;
+    align-items: center;
+    margin-right: 1rem;
+}
+
+.search-inline input[type="text"] {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    min-width: 320px;
+}
+
+.search-inline input[type="date"] {
+    padding: 10px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.search-inline button {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 9px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.search-results {
+    margin: 1rem 0;
+    display: grid;
+    gap: 10px;
+}
+
+.search-results .espectaculo-item {
+    background: linear-gradient(90deg, #ffffff, #fbfbfd);
+    border: 1px solid var(--border);
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+}

@@ -1,21 +1,29 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { EspectaculosService } from '../espectaculos';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { Auth } from '../auth';
+import { forkJoin, of } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-espectaculos',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './espectaculos.html',
   styleUrl: './espectaculos.css',
 })
 export class Espectaculos implements OnInit {
 
   escenarios: any[] = [];
+  escenariosFiltrados: any[] = [];
   entradasSeleccionadas: any[] = [];
+  // Búsqueda
+  searchQuery: string = '';
+  searchDate: string = '';
+  private allEspectaculosCache: any[] = [];
 
   constructor(
     private espectaculosService: EspectaculosService,
@@ -44,6 +52,7 @@ export class Espectaculos implements OnInit {
 
   ngOnInit() {
     this.entradasSeleccionadas = this.getCarrito();
+    this.loadEscenariosConEspectaculos();
 
     const compraToken = this.getCompraToken();
     const userToken = this.auth.getToken();
@@ -72,17 +81,107 @@ export class Espectaculos implements OnInit {
         this.saveCarrito([]);
       }
     });
+
+    this.loadAllEspectaculos().subscribe({ next: () => { }, error: () => { } });
+  }
+
+  onSearch() {
+    const q = this.searchQuery?.trim().toLowerCase() || '';
+    const fecha = this.searchDate || '';
+
+    this.escenariosFiltrados = this.escenarios
+      .map(escenario => ({
+        ...escenario,
+        espectaculos: (escenario.espectaculos || []).filter((espectaculo: any) =>
+          this.matchesSearch(espectaculo, escenario, q, fecha)
+        )
+      }))
+      .filter(escenario => !q && !fecha ? true : escenario.espectaculos.length > 0);
+  }
+
+  private loadEscenariosConEspectaculos() {
+    this.espectaculosService.getEscenarios().pipe(
+      switchMap((escenarios: any[]) => {
+        if (!escenarios || escenarios.length === 0) {
+          this.escenarios = [];
+          this.escenariosFiltrados = [];
+          return of([]);
+        }
+
+        const calls = escenarios.map(escenario =>
+          this.espectaculosService.getEspectaculos(escenario).pipe(
+            catchError(() => of([]))
+          )
+        );
+
+        return forkJoin(calls).pipe(
+          switchMap((listas: any[]) => {
+            this.escenarios = escenarios.map((escenario, index) => ({
+              ...escenario,
+              espectaculos: listas[index] || []
+            }));
+            this.escenariosFiltrados = [...this.escenarios];
+            return of(this.escenarios);
+          })
+        );
+      })
+    ).subscribe({
+      error: (err) => {
+        console.error('Error cargando escenarios', err);
+        this.escenarios = [];
+        this.escenariosFiltrados = [];
+      }
+    });
+  }
+
+  // Build a cached list of all espectaculos across escenarios
+  private loadAllEspectaculos() {
+    if (this.allEspectaculosCache.length > 0) return of(this.allEspectaculosCache);
+    return this.espectaculosService.getEscenarios().pipe(
+      switchMap((escenarios: any[]) => {
+        if (!escenarios || escenarios.length === 0) return of([]);
+        const calls = escenarios.map(es => this.espectaculosService.getEspectaculos(es).pipe(catchError(() => of([]))));
+        return forkJoin(calls).pipe(
+          switchMap((lists: any[]) => {
+            const merged = [] as any[];
+            lists.forEach((l, idx) => {
+              const escenario = escenarios[idx];
+              (l || []).forEach((esp: any) => merged.push({ ...esp, escenario: escenario.nombre }));
+            });
+            this.allEspectaculosCache = merged;
+            return of(merged);
+          })
+        );
+      })
+    );
+  }
+
+  private matchesSearch(espectaculo: any, escenario: any, q: string, fecha: string): boolean {
+    const text = [espectaculo.artista, espectaculo.nombre, escenario?.nombre]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    const textMatch = !q || text.includes(q);
+
+    if (!fecha) {
+      return textMatch;
+    }
+
+    const selectedDate = new Date(fecha).toDateString();
+    const espectaculoDate = new Date(espectaculo.fecha).toDateString();
+    return textMatch && selectedDate === espectaculoDate;
+  }
+
+  clearSearch() {
+    this.searchQuery = '';
+    this.searchDate = '';
+    this.escenariosFiltrados = [...this.escenarios];
   }
 
   getEscenarios() {
-    if (this.escenarios.length > 0) {
-      this.escenarios = [];
-      return;
+    if (this.escenarios.length === 0) {
+      this.loadEscenariosConEspectaculos();
     }
-
-    // 🔧 FIX línea 99
-    this.espectaculosService.getEscenarios()
-      .subscribe((res: any) => this.escenarios = res);
   }
 
   getEspectaculos(escenario: any) {
