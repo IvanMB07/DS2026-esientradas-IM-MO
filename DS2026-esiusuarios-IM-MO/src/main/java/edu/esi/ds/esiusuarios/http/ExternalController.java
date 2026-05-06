@@ -14,9 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import edu.esi.ds.esiusuarios.dto.EmailRequest;
+import edu.esi.ds.esiusuarios.dto.ProcesarCompraRequest;
 import edu.esi.ds.esiusuarios.services.EmailService;
 import edu.esi.ds.esiusuarios.services.EmailTemplateService;
 import edu.esi.ds.esiusuarios.services.GmailService;
+import edu.esi.ds.esiusuarios.services.MediadorService;
 import edu.esi.ds.esiusuarios.services.UserService;
 import jakarta.mail.MessagingException;
 
@@ -33,6 +35,9 @@ public class ExternalController {
 
     @Autowired
     private EmailTemplateService emailTemplateService;
+
+    @Autowired
+    private MediadorService mediadorService;
 
     // @Autowired
     // private EmailService emailService;
@@ -73,6 +78,35 @@ public class ExternalController {
 
         // Llamamos al servicio de email (ahora en esiusuarios)
         // this.emailService.sendEmail(request.getEmail(), "Tus Entradas", pdfBytes);
+    }
+
+    /**
+     * Procesa una compra completa (genera factura, QR, y envía por correo)
+     * Endpoint delegado desde esientradas a través del mediador
+     * 
+     * @param request ProcesarCompraRequest con email y datos de entradas
+     * @return String PDF en Base64
+     */
+    @PostMapping("/procesarCompra")
+    public String procesarCompra(@RequestBody ProcesarCompraRequest request) {
+        if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email es requerido");
+        }
+
+        if (request.getEntradas() == null || request.getEntradas().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Las entradas son requeridas");
+        }
+
+        try {
+            // Delegar al mediador para procesar la compra completa
+            byte[] pdf = mediadorService.procesarCompraCompleta(request.getEmail(), request.getEntradas());
+
+            // Retornar el PDF en Base64 para que esientradas lo almacene localmente
+            return Base64.getEncoder().encodeToString(pdf);
+        } catch (Exception e) {
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Error al procesar compra: " + e.getMessage());
+        }
     }
 
 }

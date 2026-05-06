@@ -83,9 +83,15 @@ export class Compra implements OnInit {
 
         this.entradas = entradasResumen.map((entrada: any) => {
           const entradaCarrito = carrito.find((item: any) => item.id === entrada.id);
+          // Combinar espectáculo: usar el del carrito como base y mergear con el del backend
+          const espectaculoCarrito = entradaCarrito?.espectaculo || {};
+          const espectaculoBackend = entrada.espectaculo || {};
           return {
             ...entrada,
-            espectaculo: entrada.espectaculo || entradaCarrito?.espectaculo
+            espectaculo: {
+              ...espectaculoCarrito,
+              ...espectaculoBackend
+            }
           };
         });
 

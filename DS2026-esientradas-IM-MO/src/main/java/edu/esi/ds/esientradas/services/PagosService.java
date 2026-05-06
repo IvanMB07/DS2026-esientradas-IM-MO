@@ -14,6 +14,7 @@ import com.stripe.param.PaymentIntentCreateParams;
 import edu.esi.ds.esientradas.dao.EntradaDao;
 import edu.esi.ds.esientradas.dao.PdfDao;
 import edu.esi.ds.esientradas.dao.TokenDao;
+import edu.esi.ds.esientradas.model.Entrada;
 import edu.esi.ds.esientradas.model.Estado;
 import edu.esi.ds.esientradas.model.PdfEntidad;
 import edu.esi.ds.esientradas.model.Token;
@@ -35,9 +36,6 @@ public class PagosService {
 
     @Autowired
     private PdfDao pdfDao;
-
-    @Autowired
-    private PdfService pdfService;
 
     public String prepararPago(Long totalCentimos) throws StripeException {
         if (totalCentimos == null || totalCentimos <= 0) {
@@ -102,17 +100,23 @@ public class PagosService {
         // 3. Lógica de BD (Entradas a VENDIDA)
         token.getEntradas().forEach(e -> e.setEstado(Estado.VENDIDA));
 
-        // 4. Generar PDF (PdfService local de esientradas)
-        byte[] pdf = pdfService.generarFactura(emailActual, token.getEntradas());
+        // 4. Preparar datos de entradas para el mediador
+        java.util.List<java.util.Map<String, String>> entradasData = new java.util.ArrayList<>();
+        for (Entrada entrada : token.getEntradas()) {
+            java.util.Map<String, String> entradaMap = new java.util.HashMap<>();
+            entradaMap.put("artista", entrada.getEspectaculo().getArtista());
+            entradaMap.put("id", entrada.getId().toString());
+            entradaMap.put("precio", (entrada.getPrecio() / 100.0) + "€");
+            entradasData.add(entradaMap);
+        }
 
-        // 5. Guardar registro (PdfDao local)
+        // 5. Delegar al mediador en esiusuarios para procesar la compra
+        byte[] pdf = usuariosService.procesarCompraEnMediador(emailActual, entradasData);
+
+        // 6. Guardar registro local de la factura
         PdfEntidad reg = new PdfEntidad();
         reg.setEmailUsuario(emailActual);
         reg.setContenido(pdf);
         pdfDao.save(reg);
-
-        // 6. ENVIAR AL OTRO BACKEND PARA EL EMAIL
-        String name = emailActual;
-        usuariosService.enviarPdfAExterno(name, emailActual, pdf);
     }
 }

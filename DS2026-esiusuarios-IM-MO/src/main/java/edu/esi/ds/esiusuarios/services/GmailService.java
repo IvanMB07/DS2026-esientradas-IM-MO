@@ -24,8 +24,10 @@ public class GmailService {
 
     private final String username;
     private final String appPassword;
+    private final EmailTemplateService emailTemplateService;
 
-    public GmailService() {
+    public GmailService(EmailTemplateService emailTemplateService) {
+        this.emailTemplateService = emailTemplateService;
         this.username = System.getenv("EMAIL_USER");
         this.appPassword = System.getenv("EMAIL_PWD");
     }
@@ -94,5 +96,17 @@ public class GmailService {
         message.setContent(multipart);
 
         Transport.send(message);
+    }
+
+    public void sendFacturaEmail(String to, byte[] pdfBytes, String qrBase64) throws MessagingException {
+        String html = emailTemplateService.generateEmail(
+                to,
+                qrBase64 != null ? qrBase64 : "");
+
+        sendHtmlEmailWithAttachment(
+                to,
+                "¡Tus Entradas!",
+                html,
+                pdfBytes);
     }
 }
