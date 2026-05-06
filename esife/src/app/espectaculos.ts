@@ -12,6 +12,16 @@ export class EspectaculosService {
     return this.http.get<any[]>('http://localhost:8080/busqueda/getEscenarios');
   }
 
+  // Búsqueda de espectáculos por texto y/o fecha
+  searchEspectaculos(query?: string, fecha?: string) {
+    let params: any = {};
+    if (query) params.q = query;
+    if (fecha) params.fecha = fecha;
+    const qs = Object.keys(params).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`).join('&');
+    const url = `http://localhost:8080/busqueda/search${qs ? ('?' + qs) : ''}`;
+    return this.http.get<any[]>(url);
+  }
+
   getEspectaculos(escenario: any) {
     return this.http.get<any[]>(
       `http://localhost:8080/busqueda/getEspectaculos/${escenario.id}`
