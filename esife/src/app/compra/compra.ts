@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Pagos } from '../pagos';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,12 +19,15 @@ export class Compra implements OnInit {
 
   entradas: any[] = [];
   total: number = 0;
+  compraExitosa: boolean = false;
+  compraFallida: boolean = false;
+  mensajeError: string = '';
   clientSecret?: string;
 
   stripe: any = null; // se inicializa dinámicamente con la clave pública del backend
   card: any;
 
-  constructor(private service: Pagos, private http: HttpClient, private auth: Auth, private router: Router) { }
+  constructor(private service: Pagos, private http: HttpClient, private auth: Auth, private router: Router, private cd: ChangeDetectorRef) { }
 
   private getCompraToken(): string | null {
     return sessionStorage.getItem('compraToken');
@@ -33,6 +36,10 @@ export class Compra implements OnInit {
   private getCarrito(): any[] {
     const carritoGuardado = sessionStorage.getItem('carrito');
     return carritoGuardado ? JSON.parse(carritoGuardado) : [];
+  }
+
+  getDisplayName(e: any): string | null {
+    return e?.espectaculo?.nombre || e?.espectaculo?.artista || e?.artista || e?.nombre || null;
   }
 
   ngOnInit() {
@@ -214,17 +221,35 @@ export class Compra implements OnInit {
     // Llamar a /pagos/confirmar con el tokenPrerreserva
     this.service.confirmarPago(compraToken, userToken).subscribe({
       next: () => {
-        alert("¡Pago realizado correctamente! Entradas compradas.");
         // Limpiar datos
         sessionStorage.removeItem('compraToken');
         sessionStorage.removeItem('carrito');
-        // Redirigir a la pantalla de espectáculos
-        this.router.navigate(['/espectaculos']);
+        // Mostrar pantalla de éxito en la misma vista
+        this.compraExitosa = true;
+        // Forzar actualización de la vista para mostrar la pantalla de éxito inmediatamente
+        try { this.cd.detectChanges(); } catch (e) { /* noop */ }
+        const form = document.getElementById('payment-form');
+        if (form) form.style.display = 'none';
       },
       error: (err) => {
         console.error("Error al confirmar el pago:", err);
-        alert("Error al procesar la compra: " + (err.error || "Error desconocido"));
+        this.mensajeError = err?.error?.message || err?.error || "Error desconocido al procesar la compra";
+        this.compraFallida = true;
+        try { this.cd.detectChanges(); } catch (e) { /* noop */ }
+        const form = document.getElementById('payment-form');
+        if (form) form.style.display = 'none';
       }
     });
+  }
+
+  volverAEspectaculos() {
+    this.router.navigate(['/espectaculos']);
+  }
+
+  reintentar() {
+    this.compraFallida = false;
+    this.mensajeError = '';
+    const form = document.getElementById('payment-form');
+    if (form) form.style.display = 'block';
   }
 }

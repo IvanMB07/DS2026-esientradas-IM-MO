@@ -1,15 +1,15 @@
 <section class="compra-view">
     <h1>Finalizar Compra</h1>
 
-    <div class="compra-card">
+    <div *ngIf="!compraExitosa && !compraFallida" class="compra-card">
         <div class="resumen-lista">
             <h3>Tus Entradas</h3>
             <ul>
                 <li *ngFor="let e of entradas" class="item-entrada">
                     <div class="info-item">
-                        <strong>{{ e.espectaculo?.artista || e.artista || e.espectaculo?.nombre || e.nombre ||
-                            'Espectáculo' }}</strong>
-                        <span> - {{ (e.espectaculo?.fecha || e.fecha) | date:'medium' }}</span>
+                        <strong>{{ getDisplayName(e) || 'Espectáculo' }}</strong><span *ngIf="getDisplayName(e)"> -
+                        </span>
+                        <span>{{ (e.espectaculo?.fecha || e.fecha) | date:'medium' }}</span>
                     </div>
 
                     <div class="detalle-asiento">
@@ -42,4 +42,22 @@
         </form>
 
     </div>
+
+    <div *ngIf="compraExitosa" class="success-screen">
+        <h2>¡Enhorabuena!</h2>
+        <p>Ya tienes tus entradas. En breves te llegarán al correo electrónico asociado a tu cuenta.</p>
+        <div style="margin-top:1rem;">
+            <button type="button" class="btn-confirmar" (click)="volverAEspectaculos()">Ir a espectáculos</button>
+        </div>
+    </div>
+
+    <div *ngIf="compraFallida" class="error-screen">
+        <h2>⚠ Error en la compra</h2>
+        <p>{{ mensajeError }}</p>
+        <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+            <button type="button" class="btn-confirmar" (click)="reintentar()">Reintentar</button>
+            <button type="button" class="btn-secondary" (click)="volverAEspectaculos()">Ir a espectáculos</button>
+        </div>
+    </div>
+
 </section>
