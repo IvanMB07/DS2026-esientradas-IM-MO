@@ -19,7 +19,6 @@
 
     <ol class="escenarios-list">
         <li *ngFor="let escenario of escenariosFiltrados" class="escenario-item">
-        <li *ngFor="let escenario of escenariosFiltrados" class="escenario-item">
             <h3 class="interactive" (click)="getEspectaculos(escenario)">{{ escenario.nombre }}</h3>
 
             <ul *ngIf="escenario.espectaculos?.length > 0" class="espectaculos-list">

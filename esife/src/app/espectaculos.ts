@@ -53,14 +53,4 @@ export class EspectaculosService {
     );
   }
 
-  // Búsqueda de espectáculos por texto y/o fecha
-  searchEspectaculos(query?: string, fecha?: string) {
-    let params: any = {};
-    if (query) params.q = query;
-    if (fecha) params.fecha = fecha;
-    const qs = Object.keys(params).map(k => `${encodeURIComponent(k)}=${encodeURIComponent(params[k])}`).join('&');
-    const url = `http://localhost:8080/busqueda/search${qs ? ('?' + qs) : ''}`;
-    return this.http.get<any[]>(url);
-  }
-
 }
