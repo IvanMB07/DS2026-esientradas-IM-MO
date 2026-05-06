@@ -35,15 +35,15 @@ export class Auth {
   }
 
   saveToken(token: string, email: string = '') {
-    localStorage.setItem('userToken', token);
+    sessionStorage.setItem('userToken', token);
     if (email) {
-      localStorage.setItem('userEmail', email);
+      sessionStorage.setItem('userEmail', email);
     }
     this.tokenSubject.next(token); // Notificar a los observadores
   }
 
   private getTokenFromStorage(): string | null {
-    const token = localStorage.getItem('userToken');
+    const token = sessionStorage.getItem('userToken');
     if (!token || token === 'null' || token === 'undefined' || token === '') {
       return null;
     }
@@ -65,7 +65,7 @@ export class Auth {
   }
 
   logout() {
-    const email = localStorage.getItem('userEmail');
+    const email = sessionStorage.getItem('userEmail');
     const token = this.getToken();
 
     // Si tenemos email y token, notificamos al backend para invalidar
@@ -87,12 +87,12 @@ export class Auth {
   }
 
   private limpiarLocal() {
-    localStorage.removeItem('userToken');
-    localStorage.removeItem('userEmail');
-    localStorage.removeItem('compraToken');
-    localStorage.removeItem('carrito');
+    sessionStorage.removeItem('userToken');
+    sessionStorage.removeItem('userEmail');
     sessionStorage.removeItem('compraToken');
     sessionStorage.removeItem('carrito');
+    //sessionStorage.removeItem('compraToken');
+    //sessionStorage.removeItem('carrito');
 
     // Actualizar el BehaviorSubject para notificar a los observadores
     this.tokenSubject.next(null);

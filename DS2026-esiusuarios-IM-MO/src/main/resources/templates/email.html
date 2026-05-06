@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .qr {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>¡Gracias por tu compra!</h1>
+        <p>Hola, <span th:text="${nombre}"></span></p>
+        <p>Muchas gracias por tu compra. Aquí tienes tus entradas.</p>
+
+        <div class="qr">
+            <p>Tu código QR:</p>
+            <img th:src="${qrImage}" alt="QR Code" />
+        </div>
+    </div>
+</body>
+
+</html>

@@ -12,7 +12,6 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class UsuariosService {
 
-	// Vuestro código está perfecto, solo sugerencia de limpieza:
 	public String checkToken(String token) {
 		// Asegurarse de que el puerto es el 8081 de esiusuarios
 		String endpoint = "http://localhost:8081/external/checkToken";
@@ -29,7 +28,7 @@ public class UsuariosService {
 		}
 	}
 
-	public void enviarPdfAExterno(String email, byte[] pdfBytes) {
+	public void enviarPdfAExterno(String name, String email, byte[] pdfBytes) {
 		String endpoint = "http://localhost:8081/external/sendEmailWithPdf";
 		RestTemplate restTemplate = new RestTemplate();
 

@@ -34,8 +34,6 @@ public abstract class Entrada {
     // El Cascade hace que si se elimina una entrada se elimine su token?
     @OneToOne(fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
     // @JoinColumn(name = "token_valor", referencedColumnName = "valor")
-    @Transient
-    protected Token token;
 
     public Long getId() {
         return id;
@@ -70,7 +68,4 @@ public abstract class Entrada {
         this.precio = precio;
     }
 
-    public void setToken(Token token) {
-        this.token = token;
-    };
 }

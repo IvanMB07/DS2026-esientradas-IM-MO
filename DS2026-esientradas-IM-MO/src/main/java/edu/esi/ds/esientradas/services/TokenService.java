@@ -26,7 +26,7 @@ public class TokenService {
     private EntradaDao entradaDao;
 
     // 15 segundos para pruebas, 600000 para 10 minutos reales
-    private static final long EXPIRATION_TIME_MILLIS = 15000;
+    private static final long EXPIRATION_TIME_MILLIS = 600000;
 
     @Transactional
     public void liberarEntradasExpiredToken(Token token) {

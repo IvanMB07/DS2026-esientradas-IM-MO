@@ -112,6 +112,7 @@ public class PagosService {
         pdfDao.save(reg);
 
         // 6. ENVIAR AL OTRO BACKEND PARA EL EMAIL
-        usuariosService.enviarPdfAExterno(emailActual, pdf);
+        String name = emailActual;
+        usuariosService.enviarPdfAExterno(name, emailActual, pdf);
     }
 }

@@ -1,5 +1,7 @@
 package edu.esi.ds.esiusuarios.http;
 
+import java.util.Base64;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -13,7 +15,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import edu.esi.ds.esiusuarios.dto.EmailRequest;
 import edu.esi.ds.esiusuarios.services.EmailService;
+import edu.esi.ds.esiusuarios.services.EmailTemplateService;
+import edu.esi.ds.esiusuarios.services.GmailService;
 import edu.esi.ds.esiusuarios.services.UserService;
+import jakarta.mail.MessagingException;
 
 @CrossOrigin(origins = "http://localhost:4200") // Limitado al frontend Angular local.
 @RestController
@@ -22,8 +27,15 @@ public class ExternalController {
 
     @Autowired
     private UserService service;
+
     @Autowired
-    private EmailService emailService;
+    private GmailService gmailService;
+
+    @Autowired
+    private EmailTemplateService emailTemplateService;
+
+    // @Autowired
+    // private EmailService emailService;
 
     @GetMapping("/checkToken/{token}")
     public String checkToken(@PathVariable String token) {
@@ -46,11 +58,21 @@ public class ExternalController {
     }
 
     @PostMapping("/sendEmailWithPdf")
-    public void sendEmailWithPdf(@RequestBody EmailRequest request) {
-        // Decodificamos el Base64 de vuelta a bytes
-        byte[] pdfBytes = java.util.Base64.getDecoder().decode(request.getPdfBase64());
+    public void sendEmailWithPdf(@RequestBody EmailRequest request) throws MessagingException {
+        byte[] pdfBytes = Base64.getDecoder().decode(request.getPdfBase64());
+
+        String html = emailTemplateService.generateEmail(
+                request.getEmail(),
+                "data:image/png;base64,");
+
+        this.gmailService.sendHtmlEmailWithAttachment(
+                request.getEmail(),
+                "¡Tus Entradas!",
+                html,
+                pdfBytes);
 
         // Llamamos al servicio de email (ahora en esiusuarios)
-        this.emailService.sendEmail(request.getEmail(), "Tus Entradas", pdfBytes);
+        // this.emailService.sendEmail(request.getEmail(), "Tus Entradas", pdfBytes);
     }
+
 }
