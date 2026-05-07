@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { EspectaculosService } from '../espectaculos';
 import { Router } from '@angular/router';
@@ -24,13 +24,21 @@ export class Espectaculos implements OnInit {
   searchQuery: string = '';
   searchDate: string = '';
   private allEspectaculosCache: any[] = [];
+  tiempoRestanteSegundos: number | null = null;
+  fechaExpiracionReserva: number | null = null;
+  private contadorReservaId: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     private espectaculosService: EspectaculosService,
     private auth: Auth,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private cd: ChangeDetectorRef
   ) { }
+
+  ngOnDestroy() {
+    this.detenerContadorReserva();
+  }
 
   private getCompraToken(): string | null {
     const t = sessionStorage.getItem('compraToken');
@@ -50,6 +58,75 @@ export class Espectaculos implements OnInit {
     sessionStorage.setItem('carrito', JSON.stringify(carrito));
   }
 
+  private construirUrlResumen(compraToken: string, userToken: string | null) {
+    let url = `http://localhost:8080/reservas/resumen?compraToken=${compraToken}`;
+    if (userToken) url += `&userToken=${userToken}`;
+    return url;
+  }
+
+  private configurarContadorReserva(res: any) {
+    const ahora = Date.now();
+    const tiempoRestanteSegundos = typeof res?.tiempoRestanteSegundos === 'number'
+      ? res.tiempoRestanteSegundos
+      : typeof res?.tiempoRestanteMillis === 'number'
+        ? Math.max(Math.ceil(res.tiempoRestanteMillis / 1000), 0)
+        : null;
+
+    const fechaExpiracion = typeof res?.horaExpiracion === 'number'
+      ? res.horaExpiracion
+      : tiempoRestanteSegundos !== null
+        ? ahora + (tiempoRestanteSegundos * 1000)
+        : null;
+
+    this.fechaExpiracionReserva = fechaExpiracion;
+    this.tiempoRestanteSegundos = tiempoRestanteSegundos;
+
+    this.detenerContadorReserva();
+
+    if (this.fechaExpiracionReserva !== null) {
+      this.actualizarContadorReserva();
+      this.contadorReservaId = setInterval(() => this.actualizarContadorReserva(), 1000);
+    }
+  }
+
+  private actualizarContadorReserva() {
+    if (this.fechaExpiracionReserva === null) {
+      return;
+    }
+
+    const restanteMs = this.fechaExpiracionReserva - Date.now();
+    this.tiempoRestanteSegundos = Math.max(Math.ceil(restanteMs / 1000), 0);
+
+    if (this.tiempoRestanteSegundos === 0) {
+      this.detenerContadorReserva();
+    }
+
+    try {
+      this.cd.detectChanges();
+    } catch (e) { /* noop */ }
+  }
+
+  private detenerContadorReserva() {
+    if (this.contadorReservaId !== null) {
+      clearInterval(this.contadorReservaId);
+      this.contadorReservaId = null;
+    }
+  }
+
+  getTiempoRestanteTexto(): string {
+    if (this.tiempoRestanteSegundos === null) {
+      return '';
+    }
+
+    const minutos = Math.floor(this.tiempoRestanteSegundos / 60);
+    const segundos = this.tiempoRestanteSegundos % 60;
+    return `${minutos}:${segundos.toString().padStart(2, '0')}`;
+  }
+
+  getReservaExpirada(): boolean {
+    return this.tiempoRestanteSegundos !== null && this.tiempoRestanteSegundos <= 0;
+  }
+
   ngOnInit() {
     this.entradasSeleccionadas = this.getCarrito();
     this.loadEscenariosConEspectaculos();
@@ -59,12 +136,10 @@ export class Espectaculos implements OnInit {
 
     if (!compraToken) return;
 
-    let url = `http://localhost:8080/reservas/resumen?compraToken=${compraToken}`;
-    if (userToken) url += `&userToken=${userToken}`;
-
-    this.http.get<any>(url).subscribe({
+    this.http.get<any>(this.construirUrlResumen(compraToken, userToken)).subscribe({
       next: (res) => {
         const entradasBackend = res.entradas || [];
+        this.configurarContadorReserva(res);
 
         this.entradasSeleccionadas = entradasBackend.map((entrada: any) => {
           const entradaGuardada = this.entradasSeleccionadas.find(e => e.id === entrada.id);
@@ -79,6 +154,7 @@ export class Espectaculos implements OnInit {
       error: () => {
         this.saveCompraToken('');
         this.saveCarrito([]);
+        this.detenerContadorReserva();
       }
     });
 
@@ -249,6 +325,7 @@ export class Espectaculos implements OnInit {
       }, { responseType: 'text' }).subscribe({
         next: (nuevoToken: string) => {
           this.saveCompraToken(nuevoToken);
+          this.configurarContadorReserva({ horaExpiracion: Date.now() + (10 * 60 * 1000), tiempoRestanteSegundos: 600 });
           entrada.estado = 'PRERRESERVADA';
           this.entradasSeleccionadas.push(entradaConEspectaculo);
           this.saveCarrito(this.entradasSeleccionadas);
@@ -280,5 +357,10 @@ export class Espectaculos implements OnInit {
     const usuarioIdentificado = this.auth.getToken();
 
     this.router.navigate([usuarioIdentificado ? '/comprar' : '/auth']);
+  }
+
+  volverAEspectaculos() {
+    this.detenerContadorReserva();
+    this.router.navigate(['/espectaculos']);
   }
 }

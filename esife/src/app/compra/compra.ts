@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Pagos } from '../pagos';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -23,11 +23,18 @@ export class Compra implements OnInit {
   compraFallida: boolean = false;
   mensajeError: string = '';
   clientSecret?: string;
+  tiempoRestanteSegundos: number | null = null;
+  fechaExpiracionReserva: number | null = null;
+  private contadorReservaId: ReturnType<typeof setInterval> | null = null;
 
   stripe: any = null; // se inicializa dinámicamente con la clave pública del backend
   card: any;
 
   constructor(private service: Pagos, private http: HttpClient, private auth: Auth, private router: Router, private cd: ChangeDetectorRef) { }
+
+  ngOnDestroy() {
+    this.detenerContadorReserva();
+  }
 
   private getCompraToken(): string | null {
     return sessionStorage.getItem('compraToken');
@@ -40,6 +47,20 @@ export class Compra implements OnInit {
 
   getDisplayName(e: any): string | null {
     return e?.espectaculo?.nombre || e?.espectaculo?.artista || e?.artista || e?.nombre || null;
+  }
+
+  getTiempoRestanteTexto(): string {
+    if (this.tiempoRestanteSegundos === null) {
+      return '';
+    }
+
+    const minutos = Math.floor(this.tiempoRestanteSegundos / 60);
+    const segundos = this.tiempoRestanteSegundos % 60;
+    return `${minutos}:${segundos.toString().padStart(2, '0')}`;
+  }
+
+  getReservaExpirada(): boolean {
+    return this.tiempoRestanteSegundos !== null && this.tiempoRestanteSegundos <= 0;
   }
 
   ngOnInit() {
@@ -88,6 +109,8 @@ export class Compra implements OnInit {
         // Si devuelve directamente la lista, se queda como res
         const entradasResumen = res.entradas || res;
 
+        this.configurarContadorReserva(res);
+
         this.entradas = entradasResumen.map((entrada: any) => {
           const entradaCarrito = carrito.find((item: any) => item.id === entrada.id);
           // Combinar espectáculo: usar el del carrito como base y mergear con el del backend
@@ -107,6 +130,55 @@ export class Compra implements OnInit {
       },
       error: (err) => console.error("Error al cargar el resumen", err)
     });
+  }
+
+  private configurarContadorReserva(res: any) {
+    const ahora = Date.now();
+    const tiempoRestanteSegundos = typeof res?.tiempoRestanteSegundos === 'number'
+      ? res.tiempoRestanteSegundos
+      : typeof res?.tiempoRestanteMillis === 'number'
+        ? Math.max(Math.ceil(res.tiempoRestanteMillis / 1000), 0)
+        : null;
+
+    const fechaExpiracion = typeof res?.horaExpiracion === 'number'
+      ? res.horaExpiracion
+      : tiempoRestanteSegundos !== null
+        ? ahora + (tiempoRestanteSegundos * 1000)
+        : null;
+
+    this.fechaExpiracionReserva = fechaExpiracion;
+    this.tiempoRestanteSegundos = tiempoRestanteSegundos;
+
+    this.detenerContadorReserva();
+
+    if (this.fechaExpiracionReserva !== null) {
+      this.actualizarContadorReserva();
+      this.contadorReservaId = setInterval(() => this.actualizarContadorReserva(), 1000);
+    }
+  }
+
+  private actualizarContadorReserva() {
+    if (this.fechaExpiracionReserva === null) {
+      return;
+    }
+
+    const restanteMs = this.fechaExpiracionReserva - Date.now();
+    this.tiempoRestanteSegundos = Math.max(Math.ceil(restanteMs / 1000), 0);
+
+    if (this.tiempoRestanteSegundos === 0) {
+      this.detenerContadorReserva();
+    }
+
+    try {
+      this.cd.detectChanges();
+    } catch (e) { /* noop */ }
+  }
+
+  private detenerContadorReserva() {
+    if (this.contadorReservaId !== null) {
+      clearInterval(this.contadorReservaId);
+      this.contadorReservaId = null;
+    }
   }
 
   irAlPago() {
@@ -243,12 +315,14 @@ export class Compra implements OnInit {
   }
 
   volverAEspectaculos() {
+    this.detenerContadorReserva();
     this.router.navigate(['/espectaculos']);
   }
 
   reintentar() {
     this.compraFallida = false;
     this.mensajeError = '';
+    this.detenerContadorReserva();
     const form = document.getElementById('payment-form');
     if (form) form.style.display = 'block';
   }

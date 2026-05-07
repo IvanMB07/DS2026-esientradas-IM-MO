@@ -13,6 +13,8 @@ import jakarta.persistence.OneToMany;
 
 @Entity
 public class Token {
+    public static final long DURACION_RESERVA_MILLIS = 600000L;
+
     @Id
     @Column(length = 36)
     private String valor;
@@ -73,5 +75,47 @@ public class Token {
     // Reemplaza setEntrada por addEntrada para manejar la lista
     public void addEntrada(Entrada entrada) {
         this.entradas.add(entrada);
+    }
+
+    public Long getHoraExpiracion() {
+        if (this.hora == null) {
+            return null;
+        }
+        return this.hora + DURACION_RESERVA_MILLIS;
+    }
+
+    public Long getTiempoRestanteMillis() {
+        return getTiempoRestanteMillis(System.currentTimeMillis());
+    }
+
+    Long getTiempoRestanteMillis(long ahora) {
+        Long horaExpiracion = getHoraExpiracion();
+        if (horaExpiracion == null) {
+            return null;
+        }
+
+        return Math.max(horaExpiracion - ahora, 0L);
+    }
+
+    public Long getTiempoRestanteSegundos() {
+        return getTiempoRestanteSegundos(System.currentTimeMillis());
+    }
+
+    Long getTiempoRestanteSegundos(long ahora) {
+        Long tiempoRestanteMillis = getTiempoRestanteMillis(ahora);
+        if (tiempoRestanteMillis == null) {
+            return null;
+        }
+
+        return (tiempoRestanteMillis + 999L) / 1000L;
+    }
+
+    public boolean isCaducado() {
+        return isCaducado(System.currentTimeMillis());
+    }
+
+    boolean isCaducado(long ahora) {
+        Long tiempoRestanteMillis = getTiempoRestanteMillis(ahora);
+        return tiempoRestanteMillis != null && tiempoRestanteMillis == 0L;
     }
 }

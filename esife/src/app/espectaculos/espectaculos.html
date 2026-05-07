@@ -5,7 +5,7 @@
             <input type="text" placeholder="Buscar por artista/escenario" [(ngModel)]="searchQuery" (input)="onSearch()"
                 (keyup.enter)="onSearch()" />
             <input type="date" [(ngModel)]="searchDate" />
-            <button type="button" (click)="onSearch()">🔍</button>
+            <button type="button" (click)="onSearch()">🔎</button>
             <button type="button" (click)="clearSearch()">✖</button>
         </div>
 
@@ -60,6 +60,18 @@
             <span>Has seleccionado <strong>{{ entradasSeleccionadas.length }}</strong> entradas</span>
             <span>Total: <strong>{{ getTotal() | currency:'EUR' }}</strong></span>
         </div>
-        <button class="btn-comprar" (click)="irAComprar()">Continuar a la Compra</button>
+
+        <div class="reserva-mini" *ngIf="tiempoRestanteSegundos !== null">
+            <span class="reserva-mini-label" [class.expirada]="getReservaExpirada()">
+                {{ getReservaExpirada() ? 'Reserva expirada' : 'Tiempo restante' }}
+            </span>
+            <strong class="reserva-mini-time" [class.expirada]="getReservaExpirada()">
+                {{ getTiempoRestanteTexto() }}
+            </strong>
+        </div>
+
+        <div class="carrito-actions">
+            <button class="btn-comprar" (click)="irAComprar()">Continuar a la Compra</button>
+        </div>
     </div>
 </section>

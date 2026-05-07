@@ -31,6 +31,25 @@
             Confirmar e ir al pago
         </button>
 
+        <div class="reserva-footer" *ngIf="tiempoRestanteSegundos !== null">
+            <div class="reserva-label">
+                <span class="reserva-dot" [class.expirada]="getReservaExpirada()"></span>
+                <div>
+                    <p class="reserva-title">Reserva activa</p>
+                    <p class="reserva-text" *ngIf="!getReservaExpirada(); else expiradaTpl">
+                        Tienes tiempo para completar el pago antes de que se liberen las entradas.
+                    </p>
+                    <ng-template #expiradaTpl>
+                        <p class="reserva-text expirada">La reserva ha expirado. Vuelve a seleccionar las entradas.</p>
+                    </ng-template>
+                </div>
+            </div>
+
+            <div class="reserva-time" [class.expirada]="getReservaExpirada()">
+                {{ getTiempoRestanteTexto() }}
+            </div>
+        </div>
+
         <!-- Formulario de pago (oculto hasta prepararPago) -->
         <form id="payment-form" style="display:none;">
             <div id="card-element"><!-- Stripe Elements montará aquí --></div>
