@@ -109,7 +109,7 @@
 }
 
 .users-table tbody tr:hover {
-    background-color: rgba(46, 125, 50, 0.04);
+    background-color: rgba(15, 118, 110, 0.04);
 }
 
 .role-badge {
@@ -164,7 +164,7 @@
 .btn-primary:hover:not(:disabled) {
     background-color: var(--color-primary-dark);
     transform: translateY(-1px);
-    box-shadow: 0 10px 20px rgba(33, 102, 40, 0.12);
+    box-shadow: 0 10px 20px rgba(11, 95, 87, 0.12);
 }
 
 .btn-secondary {
@@ -295,8 +295,8 @@
 /* Fresh admin styles (self-contained) */
 :host {
     display: block;
-    --color-primary: #2e7d32;
-    --color-primary-dark: #216628;
+    --color-primary: #0f766e;
+    --color-primary-dark: #0b5f57;
 }
 
 .admin-root {
@@ -380,7 +380,7 @@
 }
 
 .users-table tbody tr:hover {
-    background: rgba(46, 125, 50, 0.03);
+    background: rgba(15, 118, 110, 0.03);
 }
 
 .role-badge {

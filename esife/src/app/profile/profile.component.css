@@ -1,7 +1,7 @@
 /* profile.component.css - clean, single-source styles for Profile component */
 
 :host {
-    --color-primary: #2e7d32;
+    --color-primary: #0f766e;
     --color-primary-dark: #216628;
     display: block;
 }
