@@ -3,6 +3,8 @@ package edu.esi.ds.esiusuarios.model;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
 
 import java.time.LocalDateTime; // Necesario para la fecha de caducidad
 
@@ -17,6 +19,9 @@ public class User {
     private String pwdRecoveryToken;
     private LocalDateTime pwdRecoveryTokenExpiry;
 
+    @Enumerated(EnumType.STRING)
+    private UserRole role; // USER por defecto, puede cambiar a ADMIN
+
     // IMPORTANTE: Hibernate necesita un constructor vacío para funcionar
     public User() {
     }
@@ -25,6 +30,7 @@ public class User {
         this.name = name;
         this.email = email;
         this.password = password;
+        this.role = UserRole.USER; // Por defecto, todo usuario nuevo es USER
     }
 
     public String getName() {
@@ -69,6 +75,14 @@ public class User {
 
     public String getEmail() {
         return email;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
     }
 
 }

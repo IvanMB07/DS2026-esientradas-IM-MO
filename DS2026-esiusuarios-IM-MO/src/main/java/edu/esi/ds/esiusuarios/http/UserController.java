@@ -1,11 +1,15 @@
 package edu.esi.ds.esiusuarios.http;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -149,6 +153,180 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
         this.service.cancelarCuenta(email);
+    }
+
+    /**
+     * Perfil del usuario autenticado.
+     */
+    @PostMapping("/profile")
+    public Map<String, String> perfil(@RequestBody Map<String, String> body) {
+        JSONObject jso = new JSONObject(body);
+        String email = jso.optString("email");
+        String token = jso.optString("token");
+
+        if (email.isEmpty() || token.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email o token ausente");
+        }
+
+        var perfil = this.service.obtenerPerfil(email, token);
+        if (perfil.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token inválido");
+        }
+
+        Map<String, String> response = new java.util.HashMap<>();
+        response.put("email", perfil.get().getEmail());
+        response.put("name", perfil.get().getName());
+        response.put("role", String.valueOf(perfil.get().getRole()));
+        return response;
+    }
+
+    /**
+     * Cambiar contraseña desde el perfil.
+     */
+    @PostMapping("/profile/change-password")
+    public void cambiarPassword(@RequestBody Map<String, String> body) {
+        JSONObject jso = new JSONObject(body);
+        String email = jso.optString("email");
+        String token = jso.optString("token");
+        String currentPassword = jso.optString("currentPwd");
+        String newPassword = jso.optString("newPwd");
+
+        if (email.isEmpty() || token.isEmpty() || currentPassword.isEmpty() || newPassword.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos incompletos");
+        }
+
+        boolean exito = this.service.cambiarPassword(email, token, currentPassword, newPassword);
+        if (!exito) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No se ha podido cambiar la contraseña");
+        }
+    }
+
+    /**
+     * Baja de la cuenta desde el perfil.
+     */
+    @PostMapping("/profile/delete-account")
+    public void eliminarCuentaPropia(@RequestBody Map<String, String> body) {
+        JSONObject jso = new JSONObject(body);
+        String email = jso.optString("email");
+        String token = jso.optString("token");
+
+        if (email.isEmpty() || token.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email o token ausente");
+        }
+
+        boolean exito = this.service.eliminarCuentaPropia(email, token);
+        if (!exito) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "No se ha podido eliminar la cuenta");
+        }
+    }
+
+    // --- GESTIÓN DE ROLES ---
+
+    /**
+     * Endpoint para cambiar el rol de un usuario (solo ADMIN)
+     * 
+     * @param body Contiene: adminEmail, adminToken, targetEmail, newRole
+     */
+    @PostMapping("/change-role")
+    public Map<String, String> cambiarRol(@RequestBody Map<String, String> body) {
+        JSONObject jso = new JSONObject(body);
+        String adminEmail = jso.optString("adminEmail");
+        String adminToken = jso.optString("adminToken");
+        String targetEmail = jso.optString("targetEmail");
+        String newRole = jso.optString("newRole");
+
+        if (adminEmail.isEmpty() || adminToken.isEmpty() || targetEmail.isEmpty() || newRole.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos incompletos");
+        }
+
+        boolean exito = this.service.cambiarRol(adminEmail, adminToken, targetEmail, newRole);
+        if (!exito) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "No tienes permisos para cambiar roles o el usuario no existe");
+        }
+
+        Map<String, String> response = new java.util.HashMap<>();
+        response.put("mensaje", "Rol cambiado exitosamente");
+        response.put("email", targetEmail);
+        response.put("nuevoRol", newRole);
+        return response;
+    }
+
+    /**
+     * Endpoint para obtener el rol del usuario autenticado
+     * 
+     * @param token Token de autenticación
+     * @return El rol del usuario (USER o ADMIN)
+     */
+    @PostMapping("/get-role")
+    public Map<String, String> obtenerRol(@RequestBody Map<String, String> body) {
+        JSONObject jso = new JSONObject(body);
+        String token = jso.optString("token");
+
+        if (token.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token requerido");
+        }
+
+        String email = this.service.checkToken(token);
+        if (email == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token inválido");
+        }
+
+        String rol = String.valueOf(this.service.obtenerRol(email));
+
+        Map<String, String> response = new java.util.HashMap<>();
+        response.put("email", email);
+        response.put("role", rol);
+        return response;
+    }
+
+    /**
+     * Panel de administración: lista de usuarios.
+     */
+    @PostMapping("/admin/users")
+    public List<Map<String, String>> listarUsuariosAdmin(@RequestBody Map<String, String> body) {
+        JSONObject jso = new JSONObject(body);
+        String adminEmail = jso.optString("adminEmail");
+        String adminToken = jso.optString("adminToken");
+
+        if (adminEmail.isEmpty() || adminToken.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos incompletos");
+        }
+
+        Iterable<?> usuarios = this.service.listarUsuarios(adminEmail, adminToken);
+        if (usuarios == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No tienes permisos de administrador");
+        }
+
+        List<Map<String, String>> response = new ArrayList<>();
+        for (Object usuarioObj : usuarios) {
+            edu.esi.ds.esiusuarios.model.User usuario = (edu.esi.ds.esiusuarios.model.User) usuarioObj;
+            Map<String, String> row = new HashMap<>();
+            row.put("email", usuario.getEmail());
+            row.put("name", usuario.getName());
+            row.put("role", String.valueOf(usuario.getRole()));
+            response.add(row);
+        }
+        return response;
+    }
+
+    /**
+     * Panel de administración: eliminar usuario.
+     */
+    @DeleteMapping("/admin/users/{email}")
+    public void eliminarUsuarioAdmin(@PathVariable String email, @RequestBody Map<String, String> body) {
+        JSONObject jso = new JSONObject(body);
+        String adminEmail = jso.optString("adminEmail");
+        String adminToken = jso.optString("adminToken");
+
+        if (adminEmail.isEmpty() || adminToken.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Datos incompletos");
+        }
+
+        boolean exito = this.service.eliminarUsuarioAdmin(adminEmail, adminToken, email);
+        if (!exito) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "No se ha podido eliminar el usuario");
+        }
     }
 
 }

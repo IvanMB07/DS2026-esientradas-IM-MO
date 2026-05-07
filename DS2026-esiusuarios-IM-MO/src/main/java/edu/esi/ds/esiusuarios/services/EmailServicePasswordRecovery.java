@@ -1,9 +1,16 @@
 package edu.esi.ds.esiusuarios.services;
 
 import org.springframework.stereotype.Service;
+import jakarta.mail.MessagingException;
 
 @Service
 public class EmailServicePasswordRecovery extends EmailService {
+
+    private final GmailService gmailService;
+
+    public EmailServicePasswordRecovery(GmailService gmailService) {
+        this.gmailService = gmailService;
+    }
 
     /**
      * Envía email de recuperación de contraseña
@@ -16,10 +23,14 @@ public class EmailServicePasswordRecovery extends EmailService {
         String asunto = (String) params[0];
         String cuerpo = params.length > 1 ? (String) params[1] : "";
 
-        System.out.println("\n--- EMAIL DE RECUPERACIÓN DE CONTRASEÑA ---");
-        System.out.println("Para: " + destinatario);
-        System.out.println("Asunto: " + asunto);
-        System.out.println("Cuerpo: " + cuerpo);
-        System.out.println("----------------------------------------\n");
+        String htmlContent = "<html><body><h1>Recuperación de Contraseña</h1><p>" + cuerpo + "</p></body></html>";
+
+        try {
+            gmailService.sendHtmlEmail(destinatario, asunto, htmlContent);
+            System.out.println("✅ Email de recuperación enviado exitosamente a: " + destinatario);
+        } catch (MessagingException e) {
+            System.err.println("❌ Error enviando email de recuperación: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
