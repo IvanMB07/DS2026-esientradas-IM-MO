@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import edu.esi.ds.esiusuarios.services.UserService;
+import edu.esi.ds.esiusuarios.services.LoginAttemptService; // Importar el servicio de bloqueo
 
 @CrossOrigin(origins = "http://localhost:4200") // Limitado al frontend Angular local.
 @RestController
@@ -23,11 +24,19 @@ public class UserController {
     @Autowired
     private UserService service;
 
+    @Autowired
+    private LoginAttemptService loginAttemptService; // Inyectar el servicio de bloqueo
+
     @PostMapping("/login")
     public String login(@RequestBody Map<String, String> credentials) {
         JSONObject jso = new JSONObject(credentials);
         String email = jso.optString("email");
         String password = jso.optString("pwd");
+
+        // 1. [A07] Si está bloqueado, lanzamos 429 inmediatamente
+        if (loginAttemptService.isBlocked(email)) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Cuenta bloqueada temporalmente");
+        }
 
         if (email.isEmpty() || password.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Credenciales incompletas");
@@ -88,11 +97,16 @@ public class UserController {
     @PostMapping("/forgot-password")
     public void forgotPassword(@RequestBody Map<String, String> body) {
         String email = new JSONObject(body).optString("email");
+
+        // 1. [A07] Si está bloqueado, lanzamos 429
+        if (loginAttemptService.isBlocked(email)) {
+            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Demasiadas solicitudes");
+        }
+
         if (email.isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
         this.service.solicitarRecuperacion(email);
-        // Por seguridad, siempre respondemos OK aunque el email no exista
     }
 
     @PostMapping("/reset-password")

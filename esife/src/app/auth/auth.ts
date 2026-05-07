@@ -128,7 +128,7 @@ export class AuthComponent {
     }
 
     if (!this.esPasswordRobusta(this.pwd)) {
-      this.mensaje = 'Error: La contraseña debe tener al menos 8 caracteres, incluir un número y un símbolo (@$!%*?&)';
+      this.mensaje = 'Error: La contraseña debe tener al menos 8 caracteres, una mayúsculua, incluir un número y un símbolo (@$!%*?&)';
       return;
     }
 
