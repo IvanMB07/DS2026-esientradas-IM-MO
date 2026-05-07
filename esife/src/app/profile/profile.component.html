@@ -9,7 +9,10 @@
         </div>
     </header>
 
-    <section *ngIf="mensaje" class="message" [ngClass]="tipoMensaje">{{ mensaje }}</section>
+    <!-- Global message (non-modal) - keep but ensure appears above modals when present -->
+    <section *ngIf="mensaje && !showChangePasswordModal && !showDeleteAccountModal"
+        class="auth-message profile-global-message"
+        [ngClass]="{ 'success': tipoMensaje === 'success', 'error': tipoMensaje === 'error' }">{{ mensaje }}</section>
 
     <main *ngIf="isLoading" class="loading">Cargando perfil...</main>
 
@@ -49,15 +52,33 @@
                 <button class="btn-close" aria-label="Cerrar" (click)="cerrarChangePasswordModal()">×</button>
             </header>
             <div class="modal-body">
+                <p *ngIf="mensaje && showChangePasswordModal" class="auth-message"
+                    [ngClass]="{ 'success': tipoMensaje === 'success', 'error': tipoMensaje === 'error' }">{{ mensaje }}
+                </p>
                 <form (ngSubmit)="cambiarContrasena()">
                     <label class="form-row">Contraseña Actual
-                        <input type="password" [(ngModel)]="currentPassword" name="currentPassword" />
+                        <div class="password-wrapper">
+                            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="currentPassword"
+                                name="currentPassword" />
+                            <span class="password-toggle" (click)="showPassword = !showPassword" role="button"
+                                [innerHTML]="showPassword ? '👁' : '⌣'"></span>
+                        </div>
                     </label>
                     <label class="form-row">Nueva Contraseña
-                        <input type="password" [(ngModel)]="newPassword" name="newPassword" />
+                        <div class="password-wrapper">
+                            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="newPassword"
+                                name="newPassword" />
+                            <span class="password-toggle" (click)="showPassword = !showPassword" role="button"
+                                [innerHTML]="showPassword ? '👁' : '⌣'"></span>
+                        </div>
                     </label>
                     <label class="form-row">Confirmar Contraseña
-                        <input type="password" [(ngModel)]="confirmPassword" name="confirmPassword" />
+                        <div class="password-wrapper">
+                            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="confirmPassword"
+                                name="confirmPassword" />
+                            <span class="password-toggle" (click)="showPassword = !showPassword" role="button"
+                                [innerHTML]="showPassword ? '👁' : '⌣'"></span>
+                        </div>
                     </label>
                     <div class="modal-actions">
                         <button type="button" class="btn btn-secondary" (click)="cerrarChangePasswordModal()"
@@ -78,10 +99,18 @@
                 <button class="btn-close" aria-label="Cerrar" (click)="cerrarDeleteAccountModal()">×</button>
             </header>
             <div class="modal-body">
+                <p *ngIf="mensaje && showDeleteAccountModal" class="auth-message"
+                    [ngClass]="{ 'success': tipoMensaje === 'success', 'error': tipoMensaje === 'error' }">{{ mensaje }}
+                </p>
                 <p class="warning-text">Esta acción es <strong>irreversible</strong>. Se eliminarán todos tus datos.</p>
                 <form (ngSubmit)="borrarCuenta()">
                     <label class="form-row">Confirma tu Contraseña
-                        <input type="password" [(ngModel)]="deleteAccountPassword" name="deleteAccountPassword" />
+                        <div class="password-wrapper">
+                            <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="deleteAccountPassword"
+                                name="deleteAccountPassword" />
+                            <span class="password-toggle" (click)="showPassword = !showPassword" role="button"
+                                [innerHTML]="showPassword ? '👁' : '⌣'"></span>
+                        </div>
                     </label>
                     <label class="form-row">Escribe <strong>BORRAR</strong> para confirmar
                         <input type="text" [(ngModel)]="deleteConfirmation" name="deleteConfirmation"

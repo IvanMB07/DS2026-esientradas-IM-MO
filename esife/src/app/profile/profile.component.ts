@@ -29,6 +29,7 @@ export class ProfileComponent implements OnInit {
   newPassword = '';
   confirmPassword = '';
   isChangingPassword = false;
+  showPassword = false;
 
   // Modal de borrar cuenta
   showDeleteAccountModal = false;
@@ -91,10 +92,26 @@ export class ProfileComponent implements OnInit {
     this.confirmPassword = '';
   }
 
+  // Copia de la validación robusta usada en AuthComponent
+  private esPasswordRobusta(password: string): boolean {
+    const regex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!._-])(?=\S+$).{8,}$/;
+    return regex.test(password);
+  }
+
   cambiarContrasena(): void {
-    // Do minimal client-side checks; backend enforces password policy and current password
-    if (!this.currentPassword || !this.newPassword) {
+    // Validaciones de frontend alineadas con el flujo de registro/reset
+    if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
       this.mostrarMensaje('Por favor, completa los campos de contraseña', 'error');
+      return;
+    }
+
+    if (this.newPassword !== this.confirmPassword) {
+      this.mostrarMensaje('Error: Las contraseñas nuevas no coinciden', 'error');
+      return;
+    }
+
+    if (!this.esPasswordRobusta(this.newPassword)) {
+      this.mostrarMensaje('Error: La contraseña debe tener al menos 8 caracteres, una mayúsculua, incluir un número y un símbolo (@$!%*?&)', 'error');
       return;
     }
 
