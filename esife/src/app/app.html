@@ -5,9 +5,16 @@
                 <h1>DS2026 - esientradas</h1>
                 <p>¡Compra entradas para tus espectáculos favoritos!.</p>
             </div>
-            <button *ngIf="(isLoggedIn$ | async)" type="button" class="btn-logout" (click)="logout()">
-                Cerrar Sesión
-            </button>
+            <nav class="header-actions">
+                <ng-container *ngIf="(isLoggedIn$ | async); else loggedOutActions">
+                    <a class="btn-nav" routerLink="/espectaculos">Escenarios</a>
+                    <a class="btn-nav" routerLink="/profile">Mi perfil</a>
+                    <a class="btn-nav" *ngIf="(isAdmin$ | async)" routerLink="/admin">Panel admin</a>
+                </ng-container>
+                <ng-template #loggedOutActions>
+                    <a class="btn-nav" routerLink="/auth">Iniciar sesión</a>
+                </ng-template>
+            </nav>
         </div>
     </header>
 

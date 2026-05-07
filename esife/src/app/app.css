@@ -1,3 +1,13 @@
+/* =========================
+   app.component.css
+========================= */
+
+:root {
+    --color-primary: #2e7d32;
+    --color-primary-dark: #216628;
+    --color-primary-light: #81c784;
+}
+
 .app-shell {
     min-height: 100vh;
     padding: 2rem 1rem 2.5rem;
@@ -35,8 +45,10 @@
     font-size: 0.96rem;
 }
 
+/* BOTÓN LOGOUT */
+
 .btn-logout {
-    background-color: #dc3545;
+    background-color: var(--color-primary);
     color: white;
     border: none;
     padding: 0.5rem 1rem;
@@ -49,14 +61,49 @@
 }
 
 .btn-logout:hover {
-    background-color: #c82333;
+    background-color: var(--color-primary-dark);
 }
 
 .btn-logout:active {
-    background-color: #bd2130;
+    background-color: var(--color-primary-dark);
+}
+
+/* NAVEGACIÓN */
+
+.btn-nav {
+    color: var(--color-primary-dark);
+    text-decoration: none;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    transition:
+        background-color 0.12s,
+        color 0.12s;
+}
+
+.btn-nav:hover {
+    background-color: var(--color-primary-light);
+    color: white;
+}
+
+/* OVERRIDE GLOBAL BOTONES */
+
+button.btn-primary,
+button.btn-info {
+    background-color: var(--color-primary) !important;
+    color: white !important;
+    border: 1px solid var(--color-primary) !important;
+}
+
+button.btn-primary:hover,
+button.btn-info:hover {
+    background-color: var(--color-primary-dark) !important;
+    border-color: var(--color-primary-dark) !important;
 }
 
 @media (max-width: 600px) {
+
     .app-shell {
         padding-top: 1.25rem;
     }

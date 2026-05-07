@@ -1,0 +1,101 @@
+<div class="profile-root">
+    <header class="profile-header">
+        <div>
+            <h1>Mi Perfil</h1>
+            <p class="subtitle">Gestiona tu cuenta y seguridad</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-logout" (click)="logout()">Cerrar sesión</button>
+        </div>
+    </header>
+
+    <section *ngIf="mensaje" class="message" [ngClass]="tipoMensaje">{{ mensaje }}</section>
+
+    <main *ngIf="isLoading" class="loading">Cargando perfil...</main>
+
+    <main *ngIf="!isLoading && profile" class="profile-main">
+        <section class="card personal-info">
+            <h2>Información Personal</h2>
+            <dl class="info-grid">
+                <div>
+                    <dt>Email</dt>
+                    <dd>{{ profile.email }}</dd>
+                </div>
+                <div>
+                    <dt>Nombre</dt>
+                    <dd>{{ profile.name }}</dd>
+                </div>
+                <div>
+                    <dt>Rol</dt>
+                    <dd><span class="role-badge" [ngClass]="'role-' + profile.role">{{ profile.role }}</span></dd>
+                </div>
+            </dl>
+        </section>
+
+        <section class="card account-actions">
+            <h2>Opciones de Cuenta</h2>
+            <div class="actions">
+                <button class="btn btn-primary" (click)="abrirChangePasswordModal()">Cambiar Contraseña</button>
+                <button class="btn btn-danger" (click)="abrirDeleteAccountModal()">Borrar Cuenta</button>
+            </div>
+        </section>
+    </main>
+
+    <!-- Cambiar contraseña -->
+    <div *ngIf="showChangePasswordModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal" (click)="$event.stopPropagation()">
+            <header class="modal-header">
+                <h3>Cambiar Contraseña</h3>
+                <button class="btn-close" aria-label="Cerrar" (click)="cerrarChangePasswordModal()">×</button>
+            </header>
+            <div class="modal-body">
+                <form (ngSubmit)="cambiarContrasena()">
+                    <label class="form-row">Contraseña Actual
+                        <input type="password" [(ngModel)]="currentPassword" name="currentPassword" />
+                    </label>
+                    <label class="form-row">Nueva Contraseña
+                        <input type="password" [(ngModel)]="newPassword" name="newPassword" />
+                    </label>
+                    <label class="form-row">Confirmar Contraseña
+                        <input type="password" [(ngModel)]="confirmPassword" name="confirmPassword" />
+                    </label>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" (click)="cerrarChangePasswordModal()"
+                            [disabled]="isChangingPassword">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" [disabled]="isChangingPassword">{{
+                            isChangingPassword ? 'Cambiando...' : 'Cambiar Contraseña' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Borrar cuenta -->
+    <div *ngIf="showDeleteAccountModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal modal-danger" (click)="$event.stopPropagation()">
+            <header class="modal-header">
+                <h3>⚠️ Borrar Cuenta</h3>
+                <button class="btn-close" aria-label="Cerrar" (click)="cerrarDeleteAccountModal()">×</button>
+            </header>
+            <div class="modal-body">
+                <p class="warning-text">Esta acción es <strong>irreversible</strong>. Se eliminarán todos tus datos.</p>
+                <form (ngSubmit)="borrarCuenta()">
+                    <label class="form-row">Confirma tu Contraseña
+                        <input type="password" [(ngModel)]="deleteAccountPassword" name="deleteAccountPassword" />
+                    </label>
+                    <label class="form-row">Escribe <strong>BORRAR</strong> para confirmar
+                        <input type="text" [(ngModel)]="deleteConfirmation" name="deleteConfirmation"
+                            placeholder="BORRAR" />
+                    </label>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" (click)="cerrarDeleteAccountModal()"
+                            [disabled]="isDeleting">Cancelar</button>
+                        <button type="submit" class="btn btn-danger"
+                            [disabled]="isDeleting || deleteConfirmation !== 'BORRAR'">{{ isDeleting ? 'Borrando...' :
+                            'Borrar Permanentemente' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

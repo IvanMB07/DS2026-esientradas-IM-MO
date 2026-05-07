@@ -1,0 +1,97 @@
+<div class="admin-root">
+    <header class="admin-header">
+        <h1>Panel de Administración</h1>
+        <p class="subtitle">Gestiona usuarios y roles</p>
+    </header>
+
+    <section *ngIf="mensaje" class="message" [ngClass]="tipoMensaje">{{ mensaje }}</section>
+
+    <main *ngIf="isLoading" class="loading">Cargando usuarios...</main>
+
+    <main *ngIf="!isLoading" class="admin-main">
+        <section class="card users-card">
+            <div class="card-header">
+                <h2>Gestión de Usuarios</h2>
+                <div class="total">Total: <strong>{{ usuarios.length }}</strong></div>
+            </div>
+
+            <div *ngIf="usuarios.length === 0" class="no-users">No hay usuarios registrados</div>
+
+            <div *ngIf="usuarios.length > 0" class="table-wrap">
+                <table class="users-table" role="table">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Nombre</th>
+                            <th>Rol</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let usuario of usuarios" [ngClass]="'role-' + usuario.role">
+                            <td>{{ usuario.email }}</td>
+                            <td>{{ usuario.name }}</td>
+                            <td><span class="role-badge" [ngClass]="'role-' + usuario.role">{{ usuario.role }}</span>
+                            </td>
+                            <td class="actions-cell">
+                                <button class="btn btn-sm btn-info" (click)="abrirChangeRoleModal(usuario)">Cambiar
+                                    Rol</button>
+                                <button class="btn btn-sm btn-danger" (click)="abrirDeleteModal(usuario)"
+                                    [disabled]="!canDeleteUser(usuario)"
+                                    [title]="canDeleteUser(usuario) ? 'Eliminar usuario' : 'No puedes eliminar admins ni tu propia cuenta'">Eliminar</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modales -->
+    <div *ngIf="showChangeRoleModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal" (click)="$event.stopPropagation()">
+            <header class="modal-header">
+                <h3>Cambiar Rol de Usuario</h3>
+                <button class="btn-close" aria-label="Cerrar" (click)="cerrarChangeRoleModal()">×</button>
+            </header>
+            <div class="modal-body">
+                <p *ngIf="selectedUser" class="user-info">Cambiar rol para: <strong>{{ selectedUser.email }}</strong>
+                </p>
+                <form (ngSubmit)="cambiarRol()">
+                    <label class="form-row">Nuevo Rol
+                        <select [(ngModel)]="newRole" name="newRole">
+                            <option value="">Selecciona un rol</option>
+                            <option value="USER">Usuario</option>
+                            <option value="ADMIN">Administrador</option>
+                        </select>
+                    </label>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" (click)="cerrarChangeRoleModal()"
+                            [disabled]="isChangingRole">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" [disabled]="isChangingRole || !newRole">{{
+                            isChangingRole ? 'Cambiando...' : 'Cambiar Rol' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div *ngIf="showDeleteModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal modal-danger" (click)="$event.stopPropagation()">
+            <header class="modal-header">
+                <h3>⚠️ Eliminar Usuario</h3>
+                <button class="btn-close" aria-label="Cerrar" (click)="cerrarDeleteModal()">×</button>
+            </header>
+            <div class="modal-body">
+                <p *ngIf="userToDelete" class="warning-text">¿Estás seguro de que deseas eliminar al usuario <strong>{{
+                        userToDelete.email }}</strong>? Esta acción es <strong>irreversible</strong>.</p>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" (click)="cerrarDeleteModal()"
+                        [disabled]="isDeleting">Cancelar</button>
+                    <button type="button" class="btn btn-danger" (click)="eliminarUsuario()" [disabled]="isDeleting">{{
+                        isDeleting ? 'Eliminando...' : 'Eliminar Usuario' }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

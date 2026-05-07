@@ -1,20 +1,28 @@
 import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Auth } from './auth';
+import { Observable, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CommonModule],
+  imports: [RouterOutlet, RouterLink, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
-  isLoggedIn$: any;
+  isLoggedIn$: Observable<string | null>;
+  isAdmin$: Observable<boolean>;
 
   constructor(public auth: Auth) {
     this.isLoggedIn$ = this.auth.token$;
+    this.isAdmin$ = this.auth.token$.pipe(
+      switchMap(token => token ? this.auth.getRole() : of('')),
+      map(role => role === 'ADMIN'),
+      catchError(() => of(false))
+    );
   }
 
   logout() {

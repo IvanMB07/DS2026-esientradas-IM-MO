@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
+import { Observable, BehaviorSubject, of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 @Injectable({
@@ -62,6 +63,16 @@ export class Auth {
       return new Observable(observer => observer.error('No user token'));
     }
     return this.http.get<any[]>(`${this.reservasUrl}/carritos-usuario?userToken=${userToken}`);
+  }
+
+  getRole(): Observable<string> {
+    const token = this.getToken();
+    if (!token) {
+      return of('');
+    }
+
+    return this.http.post<{ role: string }>(`${this.usersUrl}/get-role`, { token })
+      .pipe(map((response) => response?.role || ''));
   }
 
   logout() {
