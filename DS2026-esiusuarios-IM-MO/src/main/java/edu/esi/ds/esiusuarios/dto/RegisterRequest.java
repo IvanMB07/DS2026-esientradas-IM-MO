@@ -4,16 +4,19 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public class EmailRequest {
+public class RegisterRequest {
     @NotBlank
     @Email
     @Size(max = 100)
     private String email;
+    @NotBlank
+    @Size(min = 8, max = 128)
+    private String pwd1;
+    @NotBlank
+    @Size(min = 8, max = 128)
+    private String pwd2;
 
-    @Size(max = 10485760) // 10MB máximo para PDF base64
-    private String pdfBase64; // El PDF viajará como texto codificado
     // Getters y Setters
-
     public String getEmail() {
         return email;
     }
@@ -22,11 +25,19 @@ public class EmailRequest {
         this.email = email;
     }
 
-    public String getPdfBase64() {
-        return pdfBase64;
+    public String getPwd1() {
+        return pwd1;
     }
 
-    public void setPdfBase64(String pdfBase64) {
-        this.pdfBase64 = pdfBase64;
+    public void setPwd1(String pwd1) {
+        this.pwd1 = pwd1;
+    }
+
+    public String getPwd2() {
+        return pwd2;
+    }
+
+    public void setPwd2(String pwd2) {
+        this.pwd2 = pwd2;
     }
 }

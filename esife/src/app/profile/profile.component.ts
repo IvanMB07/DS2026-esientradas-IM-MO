@@ -111,7 +111,7 @@ export class ProfileComponent implements OnInit {
     }
 
     if (!this.esPasswordRobusta(this.newPassword)) {
-      this.mostrarMensaje('Error: La contraseña debe tener al menos 8 caracteres, una mayúsculua, incluir un número y un símbolo (@$!%*?&)', 'error');
+      this.mostrarMensaje('Error: La contraseña debe tener al menos 8 caracteres, una mayúscula, incluir un número y un símbolo (@#$%^&+=!._-)', 'error');
       return;
     }
 

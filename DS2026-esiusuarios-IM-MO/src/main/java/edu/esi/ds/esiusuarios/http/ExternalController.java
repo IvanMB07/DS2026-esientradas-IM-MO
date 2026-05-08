@@ -4,6 +4,7 @@ import java.util.Base64;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,7 +64,7 @@ public class ExternalController {
     }
 
     @PostMapping("/sendEmailWithPdf")
-    public void sendEmailWithPdf(@RequestBody EmailRequest request) throws MessagingException {
+    public void sendEmailWithPdf(@Valid @RequestBody EmailRequest request) throws MessagingException {
         byte[] pdfBytes = Base64.getDecoder().decode(request.getPdfBase64());
 
         String html = emailTemplateService.generateEmail(
@@ -88,7 +89,7 @@ public class ExternalController {
      * @return String PDF en Base64
      */
     @PostMapping("/procesarCompra")
-    public String procesarCompra(@RequestBody ProcesarCompraRequest request) {
+    public String procesarCompra(@Valid @RequestBody ProcesarCompraRequest request) {
         if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email es requerido");
         }

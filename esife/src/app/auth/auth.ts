@@ -347,7 +347,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     }
 
     if (!this.esPasswordRobusta(this.pwd)) {
-      this.mensaje = 'Error: La contraseña debe tener al menos 8 caracteres, una mayúsculua, incluir un número y un símbolo (@$!%*?&)';
+      this.mensaje = 'Error: La contraseña debe tener al menos 8 caracteres, una mayúsculua, incluir un número y un símbolo (@#$%^&+=!._-)';
       return;
     }
 
@@ -432,7 +432,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     }
 
     if (!this.esPasswordRobusta(this.nuevaPassword)) {
-      this.mensaje = 'Error: La nueva contraseña debe tener al menos 8 caracteres, un número y un símbolo';
+      this.mensaje = 'Error: La nueva contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo (@#$%^&+=!._-)';
       return;
     }
 
