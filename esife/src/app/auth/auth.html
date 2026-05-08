@@ -4,17 +4,18 @@
         <p class="auth-subtitle">Accede a tu cuenta para comprar entradas</p>
 
         <form (ngSubmit)="onSubmit()" class="auth-form">
-            <input type="email" name="email" [(ngModel)]="email" placeholder="Email" required [disabled]="isLoading">
+            <input type="email" name="email" [(ngModel)]="email" (ngModelChange)="onEmailChange($event)"
+                placeholder="Email" required [disabled]="isLoading || isAccountBlocked">
 
             <div class="password-wrapper">
                 <input [type]="showPassword ? 'text' : 'password'" name="pwd" [(ngModel)]="pwd" placeholder="Contraseña"
-                    required [disabled]="isLoading">
+                    required [disabled]="isLoading || isAccountBlocked">
                 <span class="password-toggle" (click)="showPassword = !showPassword" role="button"
                     [innerHTML]="showPassword ? '👁' : '⌣'">
                 </span>
             </div>
 
-            <button type="submit" [disabled]="isLoading">
+            <button type="submit" [disabled]="isLoading || isAccountBlocked">
                 {{ isLoading ? 'Cargando...' : 'Entrar' }}
             </button>
         </form>
@@ -37,7 +38,8 @@
         <p class="auth-subtitle">Regístrate para comprar entradas</p>
 
         <form (ngSubmit)="onSubmit()" class="auth-form">
-            <input type="email" name="email" [(ngModel)]="email" placeholder="Email" required [disabled]="isLoading">
+            <input type="email" name="email" [(ngModel)]="email" (ngModelChange)="onEmailChange($event)"
+                placeholder="Email" required [disabled]="isLoading">
 
             <div class="password-wrapper">
                 <input [type]="showPassword ? 'text' : 'password'" name="pwd" [(ngModel)]="pwd" placeholder="Contraseña"
@@ -72,10 +74,10 @@
         <p class="auth-subtitle">Te enviaremos un email con instrucciones para recuperar tu contraseña</p>
 
         <form (ngSubmit)="onSubmit()" class="auth-form">
-            <input type="email" name="email" [(ngModel)]="email" placeholder="Ingresa tu email" required
-                [disabled]="isLoading">
+            <input type="email" name="email" [(ngModel)]="email" (ngModelChange)="onEmailChange($event)"
+                placeholder="Ingresa tu email" required [disabled]="isLoading || isAccountBlocked">
 
-            <button type="submit" [disabled]="isLoading">
+            <button type="submit" [disabled]="isLoading || isAccountBlocked">
                 {{ isLoading ? 'Enviando...' : 'Enviar instrucciones' }}
             </button>
         </form>

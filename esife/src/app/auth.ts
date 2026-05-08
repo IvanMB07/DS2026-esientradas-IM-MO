@@ -4,6 +4,15 @@ import { Observable, BehaviorSubject, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
+export interface LoginStatusResponse {
+  email: string;
+  blocked: boolean;
+  attempts: number;
+  blockedUntil: string | null;
+  retryAfterSeconds: number;
+  message?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -28,6 +37,10 @@ export class Auth {
   // Recuperación de contraseña: solicitar token
   forgotPassword(email: string): Observable<void> {
     return this.http.post<void>(`${this.usersUrl}/forgot-password`, { email });
+  }
+
+  getLoginStatus(email: string): Observable<LoginStatusResponse> {
+    return this.http.get<LoginStatusResponse>(`${this.usersUrl}/login-status?email=${encodeURIComponent(email)}`);
   }
 
   // Recuperación de contraseña: resetear con token

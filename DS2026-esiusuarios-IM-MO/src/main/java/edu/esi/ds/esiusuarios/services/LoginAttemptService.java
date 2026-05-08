@@ -3,6 +3,7 @@ package edu.esi.ds.esiusuarios.services;
 import org.springframework.stereotype.Service;
 import java.util.concurrent.ConcurrentHashMap;
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.Map;
 
 @Service
@@ -40,5 +41,32 @@ public class LoginAttemptService {
             return true;
         }
         return false;
+    }
+
+    public int getAttempts(String key) {
+        return attemptsCache.getOrDefault(key, 0);
+    }
+
+    public LocalDateTime getBlockedUntil(String key) {
+        if (!blockTimeCache.containsKey(key)) {
+            return null;
+        }
+
+        LocalDateTime blockedUntil = blockTimeCache.get(key);
+        if (blockedUntil.isBefore(LocalDateTime.now())) {
+            loginSucceeded(key);
+            return null;
+        }
+
+        return blockedUntil;
+    }
+
+    public long getRemainingBlockSeconds(String key) {
+        LocalDateTime blockedUntil = getBlockedUntil(key);
+        if (blockedUntil == null) {
+            return 0L;
+        }
+
+        return Math.max(0L, Duration.between(LocalDateTime.now(), blockedUntil).getSeconds());
     }
 }

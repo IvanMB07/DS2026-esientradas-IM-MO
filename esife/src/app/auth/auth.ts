@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Auth } from '../auth';
@@ -13,13 +13,18 @@ type AuthMode = 'login' | 'register' | 'forgot-password' | 'reset-password';
   templateUrl: './auth.html',
   styleUrl: './auth.css'
 })
-export class AuthComponent {
+export class AuthComponent implements OnInit, OnDestroy {
   // Campos comunes
   email = '';
   pwd = '';
   pwd2 = '';
   mensaje = '';
   isLoading = false;
+  isAccountBlocked = false;
+  blockedMessage = '';
+  blockedEmail: string | null = null;
+  blockedUntil: string | null = null;
+  retryAfterSeconds = 0;
 
   // Modo actual de autenticación
   authMode: AuthMode = 'login';
@@ -32,23 +37,105 @@ export class AuthComponent {
   nuevaPassword = '';
   confirmarPassword = '';
 
+  private emailStatusTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly blockStateStorageKey = 'auth-login-block-state';
+
   constructor(private auth: Auth, private router: Router) { }
+
+  ngOnInit() {
+    this.restoreBlockState();
+  }
+
+  ngOnDestroy() {
+    if (this.emailStatusTimer) {
+      clearTimeout(this.emailStatusTimer);
+      this.emailStatusTimer = null;
+    }
+  }
 
   // Cambiar modo de autenticación
   setMode(mode: AuthMode) {
     this.authMode = mode;
-    this.limpiarFormulario();
+    this.limpiarFormulario(true);
     this.mensaje = '';
     this.showPassword = false; // Resetear el ojo al cambiar de modo
+
+    if (mode === 'login' || mode === 'forgot-password') {
+      this.scheduleBlockStatusCheck();
+    }
   }
 
-  private limpiarFormulario() {
-    this.email = '';
+  private limpiarFormulario(preserveEmail = false) {
+    if (!preserveEmail) {
+      this.email = '';
+    }
     this.pwd = '';
     this.pwd2 = '';
     this.resetToken = '';
     this.nuevaPassword = '';
     this.confirmarPassword = '';
+  }
+
+  private restoreBlockState() {
+    const rawState = sessionStorage.getItem(this.blockStateStorageKey);
+    if (!rawState) {
+      return;
+    }
+
+    try {
+      const state = JSON.parse(rawState) as { email?: string; blockedUntil?: string | null };
+      if (!state.email || !state.blockedUntil) {
+        this.clearStoredBlockState();
+        return;
+      }
+
+      const remaining = Math.ceil((new Date(state.blockedUntil).getTime() - Date.now()) / 1000);
+      if (!Number.isFinite(remaining) || remaining <= 0) {
+        this.clearStoredBlockState();
+        return;
+      }
+
+      this.email = state.email;
+      this.isAccountBlocked = true;
+      this.blockedEmail = state.email;
+      this.blockedUntil = state.blockedUntil;
+      this.retryAfterSeconds = remaining;
+      this.blockedMessage = this.buildBlockedMessage();
+      this.mensaje = this.blockedMessage;
+      this.startCountdown();
+    } catch {
+      this.clearStoredBlockState();
+    }
+  }
+
+  private persistBlockState() {
+    if (!this.blockedEmail || !this.blockedUntil) {
+      this.clearStoredBlockState();
+      return;
+    }
+
+    sessionStorage.setItem(
+      this.blockStateStorageKey,
+      JSON.stringify({ email: this.blockedEmail, blockedUntil: this.blockedUntil })
+    );
+  }
+
+  private clearStoredBlockState() {
+    sessionStorage.removeItem(this.blockStateStorageKey);
+  }
+
+  onEmailChange(value: string) {
+    this.email = value;
+
+    if (this.emailStatusTimer) {
+      clearTimeout(this.emailStatusTimer);
+    }
+
+    if (this.authMode === 'login' || this.authMode === 'forgot-password') {
+      if (this.esEmailValido(value)) {
+        this.emailStatusTimer = setTimeout(() => this.refreshBlockStatus(), 250);
+      }
+    }
   }
 
   // VALIDACIONES PRIVADAS
@@ -94,8 +181,132 @@ export class AuthComponent {
     }
   }
 
+  private scheduleBlockStatusCheck() {
+    if (!this.email || !this.esEmailValido(this.email)) {
+      this.clearBlockState();
+      return;
+    }
+
+    this.refreshBlockStatus();
+  }
+
+  private refreshBlockStatus() {
+    if (!this.email || !this.esEmailValido(this.email)) {
+      this.clearBlockState();
+      return;
+    }
+
+    this.auth.getLoginStatus(this.email).subscribe({
+      next: (status) => this.applyBlockStatus(status),
+      error: () => this.clearBlockState()
+    });
+  }
+
+  private applyBlockStatus(status: { blocked: boolean; blockedUntil?: string | null; retryAfterSeconds?: number; }) {
+    this.isAccountBlocked = Boolean(status.blocked);
+    this.blockedEmail = this.email;
+    this.blockedUntil = status.blockedUntil ?? null;
+    this.retryAfterSeconds = status.retryAfterSeconds ?? 0;
+
+    if (this.isAccountBlocked) {
+      this.blockedMessage = this.buildBlockedMessage();
+      this.mensaje = this.blockedMessage;
+      this.persistBlockState();
+      this.startCountdown();
+      return;
+    }
+
+    this.blockedMessage = '';
+    this.blockedEmail = null;
+    this.blockedUntil = null;
+    this.retryAfterSeconds = 0;
+    this.clearStoredBlockState();
+  }
+
+  private clearBlockState() {
+    this.isAccountBlocked = false;
+    this.blockedMessage = '';
+    this.blockedEmail = null;
+    this.blockedUntil = null;
+    this.retryAfterSeconds = 0;
+    this.clearStoredBlockState();
+
+    if (this.emailStatusTimer) {
+      clearTimeout(this.emailStatusTimer);
+      this.emailStatusTimer = null;
+    }
+  }
+
+  private buildBlockedMessage() {
+    if (this.retryAfterSeconds > 0) {
+      return `Cuenta bloqueada temporalmente. Intenta de nuevo en ${this.retryAfterSeconds} segundos.`;
+    }
+
+    return 'Cuenta bloqueada temporalmente. Intenta de nuevo más tarde.';
+  }
+
+  private normalizeBlockError(err: any) {
+    const errorBody = err?.error;
+
+    if (errorBody && typeof errorBody === 'object') {
+      return {
+        blocked: Boolean(errorBody.blocked ?? true),
+        blockedUntil: errorBody.blockedUntil ?? null,
+        retryAfterSeconds: Number(errorBody.retryAfterSeconds ?? 0),
+      };
+    }
+
+    const retryAfterHeader = Number(err?.headers?.get?.('Retry-After') ?? 0);
+
+    return {
+      blocked: true,
+      blockedUntil: null,
+      retryAfterSeconds: Number.isFinite(retryAfterHeader) ? retryAfterHeader : 0,
+    };
+  }
+
+  private startCountdown() {
+    if (!this.blockedUntil) {
+      return;
+    }
+
+    if (this.emailStatusTimer) {
+      clearTimeout(this.emailStatusTimer);
+    }
+
+    const tick = () => {
+      if (!this.blockedUntil) {
+        this.clearBlockState();
+        return;
+      }
+
+      const remaining = Math.max(0, Math.ceil((new Date(this.blockedUntil).getTime() - Date.now()) / 1000));
+      this.retryAfterSeconds = remaining;
+
+      if (remaining <= 0) {
+        this.clearBlockState();
+        if (this.authMode === 'login' || this.authMode === 'forgot-password') {
+          this.refreshBlockStatus();
+        }
+        return;
+      }
+
+      this.blockedMessage = this.buildBlockedMessage();
+      this.mensaje = this.blockedMessage;
+      this.persistBlockState();
+      this.emailStatusTimer = setTimeout(tick, 1000);
+    };
+
+    this.emailStatusTimer = setTimeout(tick, 1000);
+  }
+
   // LOGIN
   onLoginSubmit() {
+    if (this.isAccountBlocked) {
+      this.mensaje = this.blockedMessage || 'Cuenta bloqueada temporalmente';
+      return;
+    }
+
     if (!this.email || !this.pwd) {
       this.mensaje = 'Error: Por favor completa todos los campos';
       return;
@@ -104,12 +315,20 @@ export class AuthComponent {
     this.isLoading = true;
     this.auth.login(this.email, this.pwd).subscribe({
       next: (token) => {
+        this.clearBlockState();
         this.auth.saveToken(token, this.email);
         this.mensaje = '✓ ¡Bienvenido! Accediendo a su pedido...';
         setTimeout(() => this.redirigirPostLogin(), 1500);
       },
       error: (err) => {
         this.isLoading = false;
+        if (err.status === 429) {
+          this.applyBlockStatus(this.normalizeBlockError(err));
+          this.mensaje = this.blockedMessage || 'Error: Cuenta bloqueada temporalmente';
+          return;
+        }
+
+        this.clearBlockState();
         this.mensaje = 'Error: Email o contraseña incorrectos';
       }
     });
@@ -159,6 +378,11 @@ export class AuthComponent {
 
   // FORGOT PASSWORD
   onForgotPasswordSubmit() {
+    if (this.isAccountBlocked) {
+      this.mensaje = this.blockedMessage || 'Cuenta bloqueada temporalmente';
+      return;
+    }
+
     if (!this.email) {
       this.mensaje = 'Error: Por favor ingresa tu email';
       return;
@@ -183,6 +407,13 @@ export class AuthComponent {
       },
       error: (err) => {
         this.isLoading = false;
+        if (err.status === 429) {
+          this.applyBlockStatus(this.normalizeBlockError(err));
+          this.mensaje = this.blockedMessage || 'Error: Demasiadas solicitudes';
+          return;
+        }
+
+        this.clearBlockState();
         this.mensaje = 'Error: No pudimos procesar tu solicitud';
       }
     });

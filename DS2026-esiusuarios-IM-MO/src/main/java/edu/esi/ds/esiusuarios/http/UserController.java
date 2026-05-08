@@ -7,9 +7,11 @@ import java.util.Map;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,14 +34,14 @@ public class UserController {
     private LoginAttemptService loginAttemptService; // Inyectar el servicio de bloqueo
 
     @PostMapping("/login")
-    public String login(@RequestBody Map<String, String> credentials) {
+    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
         JSONObject jso = new JSONObject(credentials);
         String email = jso.optString("email");
         String password = jso.optString("pwd");
 
         // 1. [A07] Si está bloqueado, lanzamos 429 inmediatamente
         if (loginAttemptService.isBlocked(email)) {
-            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Cuenta bloqueada temporalmente");
+            return blockedResponse(email, "Cuenta bloqueada temporalmente");
         }
 
         if (email.isEmpty() || password.isEmpty()) {
@@ -48,9 +50,13 @@ public class UserController {
 
         String token = this.service.login(email, password);
         if (token == null) {
+            if (loginAttemptService.isBlocked(email)) {
+                return blockedResponse(email, "Cuenta bloqueada temporalmente");
+            }
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email o contraseña incorrectos");
         }
-        return token;
+
+        return ResponseEntity.ok(token);
     }
 
     @PostMapping("/register")
@@ -99,18 +105,33 @@ public class UserController {
     }
 
     @PostMapping("/forgot-password")
-    public void forgotPassword(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
         String email = new JSONObject(body).optString("email");
 
         // 1. [A07] Si está bloqueado, lanzamos 429
         if (loginAttemptService.isBlocked(email)) {
-            throw new ResponseStatusException(HttpStatus.TOO_MANY_REQUESTS, "Demasiadas solicitudes");
+            return blockedResponse(email, "Demasiadas solicitudes");
         }
 
         if (email.isEmpty())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 
         this.service.solicitarRecuperacion(email);
+
+        if (loginAttemptService.isBlocked(email)) {
+            return blockedResponse(email, "Demasiadas solicitudes");
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/login-status")
+    public Map<String, Object> loginStatus(@RequestParam String email) {
+        if (email == null || email.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email requerido");
+        }
+
+        return buildBlockStatus(email);
     }
 
     @PostMapping("/reset-password")
@@ -153,6 +174,28 @@ public class UserController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
         this.service.cancelarCuenta(email);
+    }
+
+    private ResponseEntity<Map<String, Object>> blockedResponse(String email, String message) {
+        Map<String, Object> payload = buildBlockStatus(email);
+        payload.put("message", message);
+
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header("Retry-After", String.valueOf(payload.get("retryAfterSeconds")))
+                .body(payload);
+    }
+
+    private Map<String, Object> buildBlockStatus(String email) {
+        Map<String, Object> payload = new HashMap<>();
+        boolean blocked = loginAttemptService.isBlocked(email);
+
+        payload.put("email", email);
+        payload.put("blocked", blocked);
+        payload.put("attempts", loginAttemptService.getAttempts(email));
+        payload.put("blockedUntil", loginAttemptService.getBlockedUntil(email));
+        payload.put("retryAfterSeconds", loginAttemptService.getRemainingBlockSeconds(email));
+
+        return payload;
     }
 
     /**
