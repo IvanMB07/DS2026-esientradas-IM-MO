@@ -15,6 +15,7 @@ import java.util.UUID;
 import java.time.LocalDateTime;
 import java.security.MessageDigest;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 
 @Service
 public class UserService implements CommandLineRunner {
@@ -39,30 +40,33 @@ public class UserService implements CommandLineRunner {
 
     @Transactional
     public String login(String email, String password) {
+        String loginEmail = email == null ? null : email.trim();
+        String loginKey = loginEmail == null ? "" : loginEmail.toLowerCase(Locale.ROOT);
+
         // [A07] Control de fuerza bruta
-        if (loginAttemptService.isBlocked(email)) {
+        if (loginAttemptService.isBlocked(loginKey)) {
             logger.warn("⚠️ Login bloqueado por seguridad: {}", email);
             return null;
         }
 
-        Optional<User> uOpt = userDao.findByEmail(email);
+        Optional<User> uOpt = userDao.findByEmail(loginEmail);
 
         if (uOpt.isPresent()) {
             User user = uOpt.get();
             if (encoder.matches(password, user.getPassword())) {
-                loginAttemptService.loginSucceeded(email); // Reset tras éxito
+                loginAttemptService.loginSucceeded(loginKey); // Reset tras éxito
                 String rawToken = UUID.randomUUID().toString();
                 user.setToken(hashToken(rawToken));
                 userDao.save(user);
-                logger.info("Login exitoso para: {}", email);
+                logger.info("Login exitoso para: {}", loginEmail);
                 return rawToken;
             } else {
-                loginAttemptService.loginFailed(email); // Incremento tras fallo
-                logger.warn("Fallo de autenticación: Contraseña incorrecta para: {}", email);
+                loginAttemptService.loginFailed(loginKey); // Incremento tras fallo
+                logger.warn("Fallo de autenticación: Contraseña incorrecta para: {}", loginEmail);
             }
         } else {
-            loginAttemptService.loginFailed(email); // Incremento aunque no exista (evita enumeración)
-            logger.warn("Fallo de autenticación: Usuario no registrado: {}", email);
+            loginAttemptService.loginFailed(loginKey); // Incremento aunque no exista (evita enumeración)
+            logger.warn("Fallo de autenticación: Usuario no registrado: {}", loginEmail);
         }
         return null;
     }

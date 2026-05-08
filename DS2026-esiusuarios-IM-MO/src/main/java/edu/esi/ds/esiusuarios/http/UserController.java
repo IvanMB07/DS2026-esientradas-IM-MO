@@ -24,7 +24,11 @@ public class UserController {
     private LoginAttemptService loginAttemptService;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
+        if (request == null || request.getEmail() == null || request.getEmail().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email requerido");
+        }
+
         if (loginAttemptService.isBlocked(request.getEmail())) {
             return blockedResponse(request.getEmail(), "Cuenta bloqueada temporalmente");
         }
@@ -34,7 +38,8 @@ public class UserController {
             if (loginAttemptService.isBlocked(request.getEmail())) {
                 return blockedResponse(request.getEmail(), "Cuenta bloqueada temporalmente");
             }
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email o contraseña incorrectos");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(buildFailureResponse(request.getEmail(), "Email o contraseña incorrectos"));
         }
         return ResponseEntity.ok(token);
     }
@@ -200,6 +205,12 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .header("Retry-After", String.valueOf(payload.get("retryAfterSeconds")))
                 .body(payload);
+    }
+
+    private Map<String, Object> buildFailureResponse(String email, String message) {
+        Map<String, Object> payload = buildBlockStatus(email);
+        payload.put("message", message);
+        return payload;
     }
 
     private Map<String, Object> buildBlockStatus(String email) {

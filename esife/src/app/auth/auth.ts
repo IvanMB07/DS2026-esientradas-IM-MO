@@ -14,11 +14,14 @@ type AuthMode = 'login' | 'register' | 'forgot-password' | 'reset-password';
   styleUrl: './auth.css'
 })
 export class AuthComponent implements OnInit, OnDestroy {
+  private readonly maxLoginAttempts = 5;
+
   // Campos comunes
   email = '';
   pwd = '';
   pwd2 = '';
   mensaje = '';
+  loginWarning = '';
   isLoading = false;
   isAccountBlocked = false;
   blockedMessage = '';
@@ -58,6 +61,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.authMode = mode;
     this.limpiarFormulario(true);
     this.mensaje = '';
+    this.loginWarning = '';
     this.showPassword = false; // Resetear el ojo al cambiar de modo
 
     if (mode === 'login' || mode === 'forgot-password') {
@@ -95,14 +99,15 @@ export class AuthComponent implements OnInit, OnDestroy {
         return;
       }
 
-      this.email = state.email;
-      this.isAccountBlocked = true;
-      this.blockedEmail = state.email;
-      this.blockedUntil = state.blockedUntil;
-      this.retryAfterSeconds = remaining;
-      this.blockedMessage = this.buildBlockedMessage();
-      this.mensaje = this.blockedMessage;
-      this.startCountdown();
+      this.limpiarFormulario();
+      this.mensaje = '';
+      this.loginWarning = '';
+      this.isAccountBlocked = false;
+      this.blockedMessage = '';
+      this.blockedEmail = null;
+      this.blockedUntil = null;
+      this.retryAfterSeconds = 0;
+      this.clearStoredBlockState();
     } catch {
       this.clearStoredBlockState();
     }
@@ -141,13 +146,6 @@ export class AuthComponent implements OnInit, OnDestroy {
   // VALIDACIONES PRIVADAS
   private esEmailValido(email: string): boolean {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  }
-
-  // AuthComponent.ts
-  private esPasswordRobusta(password: string): boolean {
-    // Debe coincidir exactamente con el Backend para evitar confusiones
-    const regex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!._-])(?=\S+$).{8,}$/;
-    return regex.test(password);
   }
 
   private redirigirPostLogin() {
@@ -193,13 +191,59 @@ export class AuthComponent implements OnInit, OnDestroy {
   private refreshBlockStatus() {
     if (!this.email || !this.esEmailValido(this.email)) {
       this.clearBlockState();
+      this.loginWarning = '';
       return;
     }
 
     this.auth.getLoginStatus(this.email).subscribe({
-      next: (status) => this.applyBlockStatus(status),
-      error: () => this.clearBlockState()
+      next: (status) => {
+        this.applyBlockStatus(status);
+        this.updateLoginWarning(status);
+      },
+      error: () => {
+        this.clearBlockState();
+        this.loginWarning = '';
+      }
     });
+  }
+
+  private updateLoginWarning(status: { blocked: boolean; attempts?: number; }) {
+    const attempts = status.attempts ?? 0;
+
+    if (this.authMode !== 'login' || status.blocked) {
+      this.loginWarning = '';
+      return;
+    }
+
+    if (attempts >= this.maxLoginAttempts - 1) {
+      this.loginWarning = 'Aviso: solo te queda 1 intento. Si no recuerdas la contraseña, te recomendamos cambiarla.';
+      return;
+    }
+
+    this.loginWarning = '';
+  }
+
+  private extractAttemptsFromError(err: any): number {
+    const body = err?.error;
+
+    if (!body) {
+      return 0;
+    }
+
+    if (typeof body === 'object') {
+      return Number(body.attempts ?? 0);
+    }
+
+    if (typeof body === 'string') {
+      try {
+        const parsed = JSON.parse(body);
+        return Number(parsed?.attempts ?? 0);
+      } catch {
+        return 0;
+      }
+    }
+
+    return 0;
   }
 
   private applyBlockStatus(status: { blocked: boolean; blockedUntil?: string | null; retryAfterSeconds?: number; }) {
@@ -209,6 +253,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.retryAfterSeconds = status.retryAfterSeconds ?? 0;
 
     if (this.isAccountBlocked) {
+      this.loginWarning = '';
       this.blockedMessage = this.buildBlockedMessage();
       this.mensaje = this.blockedMessage;
       this.persistBlockState();
@@ -316,6 +361,7 @@ export class AuthComponent implements OnInit, OnDestroy {
     this.auth.login(this.email, this.pwd).subscribe({
       next: (token) => {
         this.clearBlockState();
+        this.loginWarning = '';
         this.auth.saveToken(token, this.email);
         this.mensaje = '✓ ¡Bienvenido! Accediendo a su pedido...';
         setTimeout(() => this.redirigirPostLogin(), 1500);
@@ -330,6 +376,15 @@ export class AuthComponent implements OnInit, OnDestroy {
 
         this.clearBlockState();
         this.mensaje = 'Error: Email o contraseña incorrectos';
+        const attempts = this.extractAttemptsFromError(err);
+        this.updateLoginWarning({
+          blocked: false,
+          attempts
+        });
+
+        if (!attempts) {
+          this.refreshBlockStatus();
+        }
       }
     });
   }
@@ -343,11 +398,6 @@ export class AuthComponent implements OnInit, OnDestroy {
 
     if (!this.esEmailValido(this.email)) {
       this.mensaje = 'Error: El formato del email no es válido (ejemplo@dominio.com)';
-      return;
-    }
-
-    if (!this.esPasswordRobusta(this.pwd)) {
-      this.mensaje = 'Error: La contraseña debe tener al menos 8 caracteres, una mayúsculua, incluir un número y un símbolo (@#$%^&+=!._-)';
       return;
     }
 
@@ -428,11 +478,6 @@ export class AuthComponent implements OnInit, OnDestroy {
 
     if (this.nuevaPassword !== this.confirmarPassword) {
       this.mensaje = 'Error: Las contraseñas nuevas no coinciden';
-      return;
-    }
-
-    if (!this.esPasswordRobusta(this.nuevaPassword)) {
-      this.mensaje = 'Error: La nueva contraseña debe tener al menos 8 caracteres, una mayúscula, un número y un símbolo (@#$%^&+=!._-)';
       return;
     }
 

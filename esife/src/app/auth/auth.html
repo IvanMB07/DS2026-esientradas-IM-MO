@@ -23,6 +23,8 @@
         <p *ngIf="mensaje" class="auth-message"
             [ngClass]="{'success': mensaje.includes('✓'), 'error': mensaje.includes('Error')}">{{ mensaje }}</p>
 
+        <p *ngIf="loginWarning" class="auth-message warning">{{ loginWarning }}</p>
+
         <div class="auth-links">
             <a (click)="setMode('register')" class="auth-toggle" role="button" tabindex="0">
                 ¿No tienes cuenta? Regístrate aquí

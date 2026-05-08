@@ -51,7 +51,19 @@ export class Espectaculos implements OnInit {
   }
 
   private saveCompraToken(token: string) {
+    if (!token || token === 'null' || token === 'undefined') {
+      sessionStorage.removeItem('compraToken');
+      return;
+    }
+
     sessionStorage.setItem('compraToken', token);
+  }
+
+  private limpiarCompraToken() {
+    sessionStorage.removeItem('compraToken');
+    this.detenerContadorReserva();
+    this.tiempoRestanteSegundos = null;
+    this.fechaExpiracionReserva = null;
   }
 
   private getCarrito(): any[] {
@@ -249,9 +261,8 @@ export class Espectaculos implements OnInit {
         this.saveCarrito(this.entradasSeleccionadas);
       },
       error: () => {
-        this.saveCompraToken('');
+        this.limpiarCompraToken();
         this.saveCarrito([]);
-        this.detenerContadorReserva();
       }
     });
 
@@ -416,6 +427,9 @@ export class Espectaculos implements OnInit {
       }).subscribe(() => {
         entrada.estado = 'DISPONIBLE';
         this.entradasSeleccionadas.splice(index, 1);
+        if (this.entradasSeleccionadas.length === 0) {
+          this.limpiarCompraToken();
+        }
         this.saveCarrito(this.entradasSeleccionadas);
       });
     } else {
