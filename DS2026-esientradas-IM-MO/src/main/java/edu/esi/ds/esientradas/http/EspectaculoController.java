@@ -11,37 +11,42 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import edu.esi.ds.esientradas.model.Escenario;
-import edu.esi.ds.esientradas.services.EscenarioService;
+import edu.esi.ds.esientradas.model.Espectaculo;
+import edu.esi.ds.esientradas.services.EspectaculoService;
 import edu.esi.ds.esientradas.services.UsuariosService;
 
 @RestController
-@RequestMapping("/escenarios")
-public class EscenarioController {
+@RequestMapping("/espectaculos")
+public class EspectaculoController {
 
     @Autowired
-    private EscenarioService service;
+    private EspectaculoService service;
 
     @Autowired
     private UsuariosService usuariosService;
 
     @PostMapping("/insertar")
-    public void insertar(@RequestBody Escenario escenario, @RequestParam String userToken) {
+    public void insertar(@RequestBody Espectaculo espectaculo, @RequestParam String userToken) {
         // Validar token y que sea ADMIN
         if (!usuariosService.isAdmin(userToken)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Solo un administrador puede insertar escenarios");
+                    "Solo un administrador puede insertar espectáculos");
         }
 
-        if (escenario.getNombre() == null || escenario.getNombre().isEmpty()) {
+        if (espectaculo.getArtista() == null || espectaculo.getArtista().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "El nombre del escenario no puede ser nulo o vacío");
+                    "El nombre del artista no puede ser nulo o vacío");
         }
-        if (escenario.getDescripcion() == null || escenario.getDescripcion().isEmpty()) {
+        if (espectaculo.getFecha() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "La descipción del escenario no puede ser nula o vacía");
+                    "La fecha del espectáculo no puede ser nula");
         }
-        this.service.insertar(escenario);
+        if (espectaculo.getEscenario() == null || espectaculo.getEscenario().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "El escenario no puede ser nulo");
+        }
+
+        this.service.insertar(espectaculo);
     }
 
     @DeleteMapping("/eliminar/{id}")
@@ -49,12 +54,12 @@ public class EscenarioController {
         // Validar token y que sea ADMIN
         if (!usuariosService.isAdmin(userToken)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Solo un administrador puede eliminar escenarios");
+                    "Solo un administrador puede eliminar espectáculos");
         }
 
         if (id == null || id <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "El ID del escenario no es válido");
+                    "El ID del espectáculo no es válido");
         }
 
         this.service.eliminar(id);

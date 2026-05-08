@@ -6,38 +6,39 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import edu.esi.ds.esientradas.dao.EscenarioDao;
-import edu.esi.ds.esientradas.model.Escenario;
+import edu.esi.ds.esientradas.dao.EspectaculoDao;
+import edu.esi.ds.esientradas.model.Espectaculo;
 
 @Service
-public class EscenarioService {
+public class EspectaculoService {
 
     @Autowired
-    private EscenarioDao dao;
+    private EspectaculoDao dao;
 
-    public void insertar(Escenario escenario) {
+    public void insertar(Espectaculo espectaculo) {
         try {
-            this.dao.save(escenario);
+            this.dao.save(espectaculo);
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage(), e);
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No sabemos qué ha pasado, " +
-                    "pero hubo error al insertar el escenario" + e.getMessage(), e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "No sabemos qué ha pasado, pero hubo error al insertar el espectáculo: " + e.getMessage(),
+                    e);
         }
     }
 
     public void eliminar(Long id) {
         try {
             if (!this.dao.existsById(id)) {
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El escenario no existe");
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "El espectáculo no existe");
             }
             this.dao.deleteById(id);
         } catch (DataIntegrityViolationException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    "No se puede eliminar el escenario porque tiene espectáculos asociados", e);
+                    "No se puede eliminar el espectáculo porque tiene entradas asociadas", e);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Error al eliminar el escenario: " + e.getMessage(), e);
+                    "Error al eliminar el espectáculo: " + e.getMessage(), e);
         }
     }
 }

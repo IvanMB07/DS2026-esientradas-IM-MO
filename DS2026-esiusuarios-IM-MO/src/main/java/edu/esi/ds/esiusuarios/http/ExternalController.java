@@ -110,4 +110,44 @@ public class ExternalController {
         }
     }
 
+    /**
+     * Verifica si un usuario es ADMIN basado en su token
+     * 
+     * @param token Token del usuario
+     * @return Boolean true si es ADMIN, false en caso contrario
+     */
+    @GetMapping("/checkAdmin/{token}")
+    public Boolean checkAdmin(@PathVariable String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token is required");
+        }
+
+        String email = this.service.checkToken(token);
+        if (email == null) {
+            return false;
+        }
+
+        return this.service.esAdmin(email);
+    }
+
+    /**
+     * Obtiene el rol de un usuario basado en su token
+     * 
+     * @param token Token del usuario
+     * @return String El rol del usuario (USER, ADMIN, etc)
+     */
+    @GetMapping("/getRol/{token}")
+    public String getRol(@PathVariable String token) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Token is required");
+        }
+
+        String email = this.service.checkToken(token);
+        if (email == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+        }
+
+        return String.valueOf(this.service.obtenerRol(email));
+    }
+
 }

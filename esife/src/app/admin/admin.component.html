@@ -1,15 +1,31 @@
 <div class="admin-root">
     <header class="admin-header">
         <h1>Panel de Administración</h1>
-        <p class="subtitle">Gestiona usuarios y roles</p>
+        <p class="subtitle">Gestiona usuarios, escenarios y espectáculos</p>
     </header>
 
     <section *ngIf="mensaje" class="message" [ngClass]="tipoMensaje">{{ mensaje }}</section>
 
-    <main *ngIf="isLoading" class="loading">Cargando usuarios...</main>
+    <main *ngIf="isLoading" class="loading">Cargando datos...</main>
 
     <main *ngIf="!isLoading" class="admin-main">
-        <section class="card users-card">
+        <!-- Navegación de pestañas -->
+        <nav class="tabs-nav">
+            <button class="tab-button" [class.active]="activeTab === 'usuarios'" (click)="activeTab = 'usuarios'">
+                👥 Usuarios
+            </button>
+            <button class="tab-button" [class.active]="activeTab === 'escenarios'" (click)="activeTab = 'escenarios'">
+                🏛️ Escenarios
+            </button>
+            <button class="tab-button" [class.active]="activeTab === 'espectaculos'"
+                (click)="activeTab = 'espectaculos'">
+                🎭 Espectáculos
+            </button>
+            <button class="btn btn-logout" (click)="logout()">Cerrar Sesión</button>
+        </nav>
+
+        <!-- Sección de Usuarios -->
+        <section *ngIf="activeTab === 'usuarios'" class="card users-card">
             <div class="card-header">
                 <h2>Gestión de Usuarios</h2>
                 <div class="total">Total: <strong>{{ usuarios.length }}</strong></div>
@@ -34,7 +50,9 @@
                             <td><span class="role-badge" [ngClass]="'role-' + usuario.role">{{ usuario.role }}</span>
                             </td>
                             <td class="actions-cell">
-                                <button class="btn btn-sm btn-info" (click)="abrirChangeRoleModal(usuario)">Cambiar
+                                <button class="btn btn-sm btn-info" (click)="abrirChangeRoleModal(usuario)"
+                                    [disabled]="!canChangeUserRole(usuario)"
+                                    [title]="canChangeUserRole(usuario) ? 'Cambiar rol' : 'No puedes cambiar tu propio rol'">Cambiar
                                     Rol</button>
                                 <button class="btn btn-sm btn-danger" (click)="abrirDeleteModal(usuario)"
                                     [disabled]="!canDeleteUser(usuario)"
@@ -45,9 +63,102 @@
                 </table>
             </div>
         </section>
+
+        <!-- Sección de Escenarios -->
+        <section *ngIf="activeTab === 'escenarios'" class="card">
+            <div class="card-header">
+                <h2>Gestión de Escenarios</h2>
+                <button class="btn btn-primary" (click)="abrirEscenarioModal()">+ Nuevo Escenario</button>
+            </div>
+
+            <div *ngIf="escenarios.length === 0" class="no-data">No hay escenarios registrados</div>
+
+            <div *ngIf="escenarios.length > 0" class="table-wrap">
+                <table class="table" role="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nombre</th>
+                            <th>Descripción</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <ng-container *ngFor="let escenario of escenarios">
+                            <tr>
+                                <td>{{ escenario.id }}</td>
+                                <td>{{ escenario.nombre }}</td>
+                                <td>{{ escenario.descripcion }}</td>
+                                <td class="actions-cell">
+                                    <button class="btn btn-sm btn-info"
+                                        (click)="toggleEspectaculosEscenario(escenario.id)">
+                                        {{ escenarioExpandidoId === escenario.id ? 'Ocultar espectáculos' : 'Ver
+                                        espectáculos' }}
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" (click)="eliminarEscenario(escenario)">
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="escenarioExpandidoId === escenario.id">
+                                <td colspan="4" class="escenario-espectaculos-cell">
+                                    <div class="escenario-espectaculos">
+                                        <p *ngIf="cargandoEspectaculosEscenarioId === escenario.id"
+                                            class="mini-loading">
+                                            Cargando espectáculos...
+                                        </p>
+
+                                        <p *ngIf="cargandoEspectaculosEscenarioId !== escenario.id && (espectaculosPorEscenario[escenario.id!] || []).length === 0"
+                                            class="mini-empty">
+                                            Este escenario no tiene espectáculos asociados.
+                                        </p>
+
+                                        <table
+                                            *ngIf="cargandoEspectaculosEscenarioId !== escenario.id && (espectaculosPorEscenario[escenario.id!] || []).length > 0"
+                                            class="mini-table" role="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Artista</th>
+                                                    <th>Fecha</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr *ngFor="let espectaculo of espectaculosPorEscenario[escenario.id!]">
+                                                    <td>{{ espectaculo.artista }}</td>
+                                                    <td>{{ espectaculo.fecha | date:'dd/MM/yyyy HH:mm' }}</td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-danger"
+                                                            (click)="eliminarEspectaculo(espectaculo.id, escenario.id, espectaculo.artista)">
+                                                            Eliminar espectáculo
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                        </ng-container>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Sección de Espectáculos -->
+        <section *ngIf="activeTab === 'espectaculos'" class="card">
+            <div class="card-header">
+                <h2>Gestión de Espectáculos</h2>
+                <button class="btn btn-primary" (click)="abrirEspectaculoModal()">+ Nuevo Espectáculo</button>
+            </div>
+
+            <div class="form-info">
+                <p>Desde aquí puedes crear nuevos espectáculos vinculándolos a un escenario.</p>
+            </div>
+        </section>
     </main>
 
-    <!-- Modales -->
+    <!-- Modal de Cambiar Rol -->
     <div *ngIf="showChangeRoleModal" class="modal-overlay" role="dialog" aria-modal="true">
         <div class="modal" (click)="$event.stopPropagation()">
             <header class="modal-header">
@@ -76,6 +187,7 @@
         </div>
     </div>
 
+    <!-- Modal de Eliminar Usuario -->
     <div *ngIf="showDeleteModal" class="modal-overlay" role="dialog" aria-modal="true">
         <div class="modal modal-danger" (click)="$event.stopPropagation()">
             <header class="modal-header">
@@ -91,6 +203,67 @@
                     <button type="button" class="btn btn-danger" (click)="eliminarUsuario()" [disabled]="isDeleting">{{
                         isDeleting ? 'Eliminando...' : 'Eliminar Usuario' }}</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Nuevo Escenario -->
+    <div *ngIf="showEscenarioModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal" (click)="$event.stopPropagation()">
+            <header class="modal-header">
+                <h3>Nuevo Escenario</h3>
+                <button class="btn-close" aria-label="Cerrar" (click)="cerrarEscenarioModal()">×</button>
+            </header>
+            <div class="modal-body">
+                <form (ngSubmit)="insertarEscenario()">
+                    <label class="form-row">Nombre del Escenario
+                        <input type="text" [(ngModel)]="nuevoEscenario.nombre" name="nombre"
+                            placeholder="Ej: Teatro Principal" required>
+                    </label>
+                    <label class="form-row">Descripción
+                        <textarea [(ngModel)]="nuevoEscenario.descripcion" name="descripcion"
+                            placeholder="Descripción del escenario" rows="4" required></textarea>
+                    </label>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" (click)="cerrarEscenarioModal()"
+                            [disabled]="isInsertingEscenario">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" [disabled]="isInsertingEscenario">{{
+                            isInsertingEscenario ? 'Insertando...' : 'Insertar Escenario' }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Nuevo Espectáculo -->
+    <div *ngIf="showEspectaculoModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal" (click)="$event.stopPropagation()">
+            <header class="modal-header">
+                <h3>Nuevo Espectáculo</h3>
+                <button class="btn-close" aria-label="Cerrar" (click)="cerrarEspectaculoModal()">×</button>
+            </header>
+            <div class="modal-body">
+                <form (ngSubmit)="insertarEspectaculo()">
+                    <label class="form-row">Artista
+                        <input type="text" [(ngModel)]="nuevoEspectaculo.artista" name="artista"
+                            placeholder="Nombre del artista" required>
+                    </label>
+                    <label class="form-row">Fecha
+                        <input type="date" [(ngModel)]="nuevoEspectaculo.fecha" name="fecha" required>
+                    </label>
+                    <label class="form-row">Escenario
+                        <select [(ngModel)]="escenarioSeleccionadoId" name="escenario" required>
+                            <option [ngValue]="null">Selecciona un escenario</option>
+                            <option *ngFor="let esc of escenarios" [ngValue]="esc.id">{{ esc.nombre }}</option>
+                        </select>
+                    </label>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" (click)="cerrarEspectaculoModal()"
+                            [disabled]="isInsertingEspectaculo">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" [disabled]="isInsertingEspectaculo">{{
+                            isInsertingEspectaculo ? 'Insertando...' : 'Insertar Espectáculo' }}</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

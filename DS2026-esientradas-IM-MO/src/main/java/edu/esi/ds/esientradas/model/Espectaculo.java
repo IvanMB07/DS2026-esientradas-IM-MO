@@ -18,7 +18,8 @@ import jakarta.persistence.OneToMany;
 
 @Entity
 public class Espectaculo {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String artista;
     private LocalDateTime fecha;
@@ -54,7 +55,6 @@ public class Espectaculo {
         this.fecha = fecha;
     }
 
-    @JsonIgnore
     public Escenario getEscenario() {
         return escenario;
     }

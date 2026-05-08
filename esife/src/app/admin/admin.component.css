@@ -299,6 +299,439 @@
     --color-primary-dark: #0b5f57;
 }
 
+/* Estilos para pestañas */
+.tabs-nav {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid #e5e7eb;
+    background-color: #f3f4f6;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+    border-color: var(--color-primary);
+    background-color: rgba(15, 118, 110, 0.05);
+}
+
+.tab-button.active {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+}
+
+.btn-logout {
+    margin-left: auto;
+    padding: 0.75rem 1.5rem;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-logout:hover {
+    background-color: #c82333;
+    transform: translateY(-1px);
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.2);
+}
+
+/* Estilos para tarjetas y formularios */
+.card {
+    background: rgba(255, 255, 255, 0.92);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(31, 41, 55, 0.06);
+    box-shadow: 0 14px 34px rgba(31, 41, 55, 0.04);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--color-primary);
+}
+
+.card-header h2 {
+    font-size: 1.3rem;
+    color: #1f2937;
+    margin: 0;
+}
+
+.total {
+    color: #6b7280;
+    font-size: 0.9rem;
+}
+
+.no-users,
+.no-data {
+    text-align: center;
+    padding: 2rem;
+    color: #9ca3af;
+    font-size: 1rem;
+}
+
+.table-wrap {
+    overflow-x: auto;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.table thead {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(31, 41, 55, 0.06);
+}
+
+.table tbody tr:hover {
+    background-color: rgba(15, 118, 110, 0.04);
+}
+
+.escenario-espectaculos-cell {
+    background: rgba(15, 118, 110, 0.04);
+}
+
+.escenario-espectaculos {
+    padding: 0.8rem;
+}
+
+.mini-loading,
+.mini-empty {
+    margin: 0;
+    color: #475569;
+    font-size: 0.92rem;
+}
+
+.mini-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+    background: #ffffff;
+    border: 1px solid rgba(2, 6, 23, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.mini-table thead {
+    background-color: #0b5f57;
+    color: #ffffff;
+}
+
+.mini-table th,
+.mini-table td {
+    padding: 0.7rem;
+    border-bottom: 1px solid rgba(2, 6, 23, 0.06);
+    text-align: left;
+}
+
+/* Estilos para formularios */
+.form-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+}
+
+.form-row label {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.5rem;
+}
+
+.form-row input,
+.form-row textarea,
+.form-row select {
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+.form-row input:focus,
+.form-row textarea:focus,
+.form-row select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.1);
+}
+
+.form-info {
+    padding: 1rem;
+    background-color: rgba(15, 118, 110, 0.05);
+    border-left: 4px solid var(--color-primary);
+    border-radius: 4px;
+    margin-bottom: 1rem;
+    color: #374151;
+}
+
+/* Estilos para modales */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(15, 23, 42, 0.54);
+    z-index: 1000;
+}
+
+.modal {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 12px;
+    max-width: 520px;
+    width: 92%;
+    box-shadow: 0 18px 55px rgba(15, 23, 42, 0.12);
+    overflow: hidden;
+}
+
+.modal-header {
+    background-color: var(--color-primary);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.btn-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.btn-close:hover {
+    transform: rotate(90deg);
+    opacity: 0.8;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-danger .modal-header {
+    background-color: #dc3545;
+}
+
+.user-info {
+    padding: 1rem;
+    background-color: #e8f4f8;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    color: #0c5460;
+    font-size: 0.95rem;
+}
+
+.warning-text {
+    padding: 1rem;
+    background-color: #fff3cd;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    color: #856404;
+    font-size: 0.95rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(31, 41, 55, 0.06);
+}
+
+.modal-actions button {
+    min-width: 120px;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: var(--color-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(11, 95, 87, 0.12);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #5a6268;
+    transform: translateY(-1px);
+}
+
+.btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+    background-color: #c82333;
+    transform: translateY(-1px);
+}
+
+.btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-info {
+    background-color: var(--color-primary);
+    color: white;
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+.btn-info:hover:not(:disabled) {
+    background-color: var(--color-primary-dark);
+}
+
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+.message {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+    animation: slideDown 0.3s ease;
+}
+
+.message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.message.info {
+    background-color: #d1ecf1;
+    color: #0c5460;
+    border: 1px solid #bee5eb;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 768px) {
+    .tabs-nav {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .tab-button {
+        width: 100%;
+        text-align: center;
+    }
+
+    .btn-logout {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .table {
+        font-size: 0.9rem;
+    }
+
+    .table th,
+    .table td {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .modal {
+        width: 95%;
+    }
+}
+
 .admin-root {
     width: min(1100px, 96%);
     margin: 1rem auto;
@@ -533,4 +966,11 @@
     .users-table td {
         padding: 0.6rem;
     }
+}
+
+/* Mantener los mensajes de estado visibles por delante del contenido */
+.admin-root .message {
+    position: sticky;
+    top: 0.75rem;
+    z-index: 1201;
 }
