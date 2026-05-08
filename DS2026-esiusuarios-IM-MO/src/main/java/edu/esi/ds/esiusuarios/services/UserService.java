@@ -207,6 +207,12 @@ public class UserService implements CommandLineRunner {
      */
     @Transactional
     public boolean cambiarRol(String adminEmail, String adminToken, String targetEmail, String newRole) {
+        if (adminEmail != null && targetEmail != null
+                && adminEmail.trim().equalsIgnoreCase(targetEmail.trim())) {
+            logger.warn("⚠️ Intento de auto-cambio de rol bloqueado: {}", adminEmail);
+            return false;
+        }
+
         // 1. Validar que el token del admin es correcto
         String adminValidated = checkToken(adminToken);
         if (adminValidated == null || !adminValidated.equals(adminEmail)) {

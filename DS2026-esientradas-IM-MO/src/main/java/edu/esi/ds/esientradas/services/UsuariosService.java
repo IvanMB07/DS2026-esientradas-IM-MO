@@ -29,6 +29,40 @@ public class UsuariosService {
 		}
 	}
 
+	/**
+	 * Verifica si un usuario es ADMIN
+	 * 
+	 * @param userToken Token del usuario
+	 * @return true si es ADMIN, false en caso contrario
+	 */
+	public boolean isAdmin(String userToken) {
+		String endpoint = "http://localhost:8081/external/checkAdmin";
+		RestTemplate restTemplate = new RestTemplate();
+		try {
+			Boolean isAdmin = restTemplate.getForObject(endpoint + "/" + userToken, Boolean.class);
+			return isAdmin != null && isAdmin;
+		} catch (RestClientException e) {
+			return false;
+		}
+	}
+
+	/**
+	 * Obtiene el rol de un usuario
+	 * 
+	 * @param userToken Token del usuario
+	 * @return El rol del usuario (USER, ADMIN, etc) o null si no es válido
+	 */
+	public String getRol(String userToken) {
+		String endpoint = "http://localhost:8081/external/getRol";
+		RestTemplate restTemplate = new RestTemplate();
+		try {
+			String role = restTemplate.getForObject(endpoint + "/" + userToken, String.class);
+			return role;
+		} catch (RestClientException e) {
+			return null;
+		}
+	}
+
 	public void enviarPdfAExterno(String name, String email, byte[] pdfBytes) {
 		String endpoint = "http://localhost:8081/external/sendEmailWithPdf";
 		RestTemplate restTemplate = new RestTemplate();

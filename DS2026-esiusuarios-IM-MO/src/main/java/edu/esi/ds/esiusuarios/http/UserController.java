@@ -146,6 +146,12 @@ public class UserController {
 
     @PostMapping("/change-role")
     public Map<String, String> cambiarRol(@Valid @RequestBody AdminRequest request) {
+        if (request.getAdminEmail() != null && request.getTargetEmail() != null
+                && request.getAdminEmail().trim().equalsIgnoreCase(request.getTargetEmail().trim())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Un administrador no puede cambiar su propio rol");
+        }
+
         boolean exito = this.service.cambiarRol(request.getAdminEmail(), request.getAdminToken(),
                 request.getTargetEmail(), request.getNewRole());
         if (!exito) {
