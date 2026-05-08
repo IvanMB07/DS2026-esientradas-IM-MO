@@ -2,11 +2,12 @@ package edu.esi.ds.esientradas.http;
 
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import edu.esi.ds.esientradas.model.Token;
 import edu.esi.ds.esientradas.services.ReservasService;
-import edu.esi.ds.esientradas.services.UsuariosService;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:4200")
@@ -15,8 +16,6 @@ public class ReservasController {
 
     @Autowired
     private ReservasService service;
-    @Autowired
-    private UsuariosService usuariosService;
 
     @PostMapping("/seleccionar")
     public String seleccionar(@RequestBody Map<String, Object> payload) {
@@ -47,5 +46,20 @@ public class ReservasController {
     @GetMapping("/carritos-usuario")
     public List<Token> getCarritosUsuario(@RequestParam String userToken) {
         return this.service.getCarritosDelUsuario(userToken);
+    }
+
+    @PostMapping("/cola/unirse")
+    public Map<String, Object> unirseCola(@RequestBody Map<String, Object> payload) {
+        Long espectaculoId = Long.parseLong(payload.get("espectaculoId").toString());
+        String cToken = payload.get("compraToken") != null ? payload.get("compraToken").toString() : null;
+        String uToken = payload.get("userToken") != null ? payload.get("userToken").toString() : null;
+
+        return this.service.unirseCola(espectaculoId, cToken, uToken);
+    }
+
+    @GetMapping("/cola/estado")
+    public Map<String, Object> estadoCola(@RequestParam Long espectaculoId,
+            @RequestParam String userToken) {
+        return this.service.estadoCola(espectaculoId, userToken);
     }
 }

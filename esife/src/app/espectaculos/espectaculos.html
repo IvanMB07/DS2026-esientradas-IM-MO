@@ -39,8 +39,7 @@
                                         'ocupada': entrada.estado === 'RESERVADA' && !estaSeleccionada(entrada),
                                         'vendida': entrada.estado === 'VENDIDA',
                                         'disponible': entrada.estado === 'DISPONIBLE'
-                                    }"
-                                    (click)="entrada.estado === 'DISPONIBLE' || estaSeleccionada(entrada) ? toggleSeleccion(espectaculo, entrada) : null">
+                                    }" (click)="toggleSeleccion(escenario, espectaculo, entrada)">
                                     <span class="label">
                                         {{ zona.key === 'Asientos Numerados' ? 'F:' + entrada.fila + ' C:' +
                                         (entrada.columna || entrada.numero) : 'Ticket ' + entrada.id }}
@@ -49,11 +48,22 @@
                                 </div>
                             </div>
                         </div>
+
+                        <ng-container *ngIf="getEstadoCola(espectaculo.id) as estadoCola">
+                            <div class="cola-status" *ngIf="estadoCola?.enCola">
+                                Estás en cola de espera para este espectáculo.
+                                Posición actual: <strong>{{ estadoCola?.posicion }}</strong>
+                            </div>
+                        </ng-container>
                     </div>
                 </li>
             </ul>
         </li>
     </ol>
+
+    <div *ngIf="colaMensajeGlobal" class="cola-alerta">
+        {{ colaMensajeGlobal }}
+    </div>
 
     <div *ngIf="entradasSeleccionadas.length > 0" class="carrito-panel">
         <div class="resumen-compra">
