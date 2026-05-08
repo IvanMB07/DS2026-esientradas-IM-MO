@@ -58,9 +58,32 @@
     box-shadow: var(--shadow);
 }
 
+.cola-status {
+    margin-top: 0.7rem;
+    padding: 0.6rem 0.8rem;
+    border-radius: 10px;
+    background: #fff7ed;
+    border: 1px solid #fdba74;
+    color: #9a3412;
+    font-weight: 600;
+}
+
+.cola-alerta {
+    margin-top: 1rem;
+    padding: 0.8rem 0.95rem;
+    border-radius: 12px;
+    border: 1px solid #86efac;
+    background: #f0fdf4;
+    color: #166534;
+    font-weight: 700;
+}
+
 .escenarios-list {
     margin: 0;
     padding-left: 1.2rem;
+    /* espacio inferior para que el último escenario no quede oculto
+       por el panel de carrito fijo (`.carrito-panel`) */
+    padding-bottom: 96px;
 }
 
 .escenario-item {

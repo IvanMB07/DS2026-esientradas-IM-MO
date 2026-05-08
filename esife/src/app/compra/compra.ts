@@ -320,8 +320,11 @@ export class Compra implements OnInit {
   }
 
   reintentar() {
+    // Restablecer estado de error/éxito y preparar para reintentar el pago
     this.compraFallida = false;
     this.mensajeError = '';
+    this.compraExitosa = false;
+    // Detener cualquier contador de reserva en curso y mostrar el formulario de pago
     this.detenerContadorReserva();
     const form = document.getElementById('payment-form');
     if (form) form.style.display = 'block';

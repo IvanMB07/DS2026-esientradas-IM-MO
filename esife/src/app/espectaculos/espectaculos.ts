@@ -27,6 +27,10 @@ export class Espectaculos implements OnInit {
   tiempoRestanteSegundos: number | null = null;
   fechaExpiracionReserva: number | null = null;
   private contadorReservaId: ReturnType<typeof setInterval> | null = null;
+  private colaPollingId: ReturnType<typeof setInterval> | null = null;
+  colaPorEspectaculo: Record<number, { enCola: boolean; posicion: number; compraTokenAsignado: string | null }> = {};
+  colaMensajeGlobal: string = '';
+  private tokensColaNotificados = new Set<string>();
 
   constructor(
     private espectaculosService: EspectaculosService,
@@ -38,6 +42,7 @@ export class Espectaculos implements OnInit {
 
   ngOnDestroy() {
     this.detenerContadorReserva();
+    this.detenerColaPolling();
   }
 
   private getCompraToken(): string | null {
@@ -113,6 +118,98 @@ export class Espectaculos implements OnInit {
     }
   }
 
+  private iniciarColaPolling() {
+    if (this.colaPollingId !== null) {
+      return;
+    }
+
+    this.colaPollingId = setInterval(() => this.refrescarEstadosCola(), 5000);
+  }
+
+  private detenerColaPolling() {
+    if (this.colaPollingId !== null) {
+      clearInterval(this.colaPollingId);
+      this.colaPollingId = null;
+    }
+  }
+
+  private refrescarEstadosCola() {
+    const userToken = this.auth.getToken();
+    if (!userToken) {
+      this.detenerColaPolling();
+      return;
+    }
+
+    const espectaculosEnCola = Object.keys(this.colaPorEspectaculo)
+      .map(k => Number(k))
+      .filter(id => this.colaPorEspectaculo[id]?.enCola);
+
+    if (espectaculosEnCola.length === 0) {
+      this.detenerColaPolling();
+      return;
+    }
+
+    espectaculosEnCola.forEach(espectaculoId => {
+      this.espectaculosService.estadoCola(espectaculoId, userToken).subscribe({
+        next: (estado) => {
+          const previo = this.colaPorEspectaculo[espectaculoId];
+          this.colaPorEspectaculo[espectaculoId] = {
+            enCola: !!estado?.enCola,
+            posicion: Number(estado?.posicion || 0),
+            compraTokenAsignado: estado?.compraTokenAsignado || null
+          };
+
+          const tokenAsignado = estado?.compraTokenAsignado;
+          if (tokenAsignado && !this.tokensColaNotificados.has(tokenAsignado)) {
+            this.tokensColaNotificados.add(tokenAsignado);
+            this.saveCompraToken(tokenAsignado);
+            this.colaMensajeGlobal = 'Te hemos asignado una entrada desde la cola de espera. Ya puedes continuar a la compra.';
+            this.cargarResumenDesdeBackend();
+          }
+
+          if (previo?.enCola && !estado?.enCola && !tokenAsignado) {
+            this.colaMensajeGlobal = 'Tu estado en cola ha cambiado. Revisa disponibilidad del espectáculo.';
+          }
+        },
+        error: () => {
+          // Ignorar errores puntuales de polling
+        }
+      });
+    });
+  }
+
+  getEstadoCola(espectaculoId: number) {
+    return this.colaPorEspectaculo[espectaculoId] || null;
+  }
+
+  private cargarResumenDesdeBackend() {
+    const compraToken = this.getCompraToken();
+    const userToken = this.auth.getToken();
+    if (!compraToken) {
+      return;
+    }
+
+    this.http.get<any>(this.construirUrlResumen(compraToken, userToken)).subscribe({
+      next: (res) => {
+        const entradasBackend = res.entradas || [];
+        this.configurarContadorReserva(res);
+
+        this.entradasSeleccionadas = entradasBackend.map((entrada: any) => {
+          const entradaGuardada = this.entradasSeleccionadas.find(e => e.id === entrada.id);
+          return {
+            ...entrada,
+            espectaculo: entrada.espectaculo || entradaGuardada?.espectaculo
+          };
+        });
+
+        this.saveCarrito(this.entradasSeleccionadas);
+      },
+      error: () => {
+        // Si falla el resumen no bloqueamos la vista
+      }
+    });
+  }
+
   getTiempoRestanteTexto(): string {
     if (this.tiempoRestanteSegundos === null) {
       return '';
@@ -159,6 +256,10 @@ export class Espectaculos implements OnInit {
     });
 
     this.loadAllEspectaculos().subscribe({ next: () => { }, error: () => { } });
+
+    if (userToken) {
+      this.iniciarColaPolling();
+    }
   }
 
   onSearch() {
@@ -291,7 +392,7 @@ export class Espectaculos implements OnInit {
     });
   }
 
-  toggleSeleccion(espectaculo: any, entrada: any) {
+  toggleSeleccion(escenario: any, espectaculo: any, entrada: any) {
     const compraToken = this.getCompraToken();
     const userToken = this.auth.getToken();
 
@@ -318,6 +419,35 @@ export class Espectaculos implements OnInit {
         this.saveCarrito(this.entradasSeleccionadas);
       });
     } else {
+      if (entrada.estado !== 'DISPONIBLE') {
+        if (escenario?.id === 6) {
+          if (!userToken) {
+            alert('Para entrar en la cola de espera debes iniciar sesión.');
+            this.router.navigate(['/auth']);
+            return;
+          }
+
+          this.espectaculosService.unirseCola(espectaculo.id, compraToken, userToken).subscribe({
+            next: (estado) => {
+              this.colaPorEspectaculo[espectaculo.id] = {
+                enCola: !!estado?.enCola,
+                posicion: Number(estado?.posicion || 0),
+                compraTokenAsignado: null
+              };
+              this.colaMensajeGlobal = `Te has unido a la cola de espera. Posición actual: ${estado?.posicion || 0}.`;
+              this.iniciarColaPolling();
+            },
+            error: () => {
+              alert('No se pudo entrar en la cola de espera.');
+            }
+          });
+          return;
+        }
+
+        alert('Entrada no disponible.');
+        return;
+      }
+
       this.http.post('http://localhost:8080/reservas/seleccionar', {
         idEntrada: entrada.id.toString(),
         compraToken,

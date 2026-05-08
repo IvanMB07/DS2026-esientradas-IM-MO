@@ -1,6 +1,9 @@
 package edu.esi.ds.esientradas.services;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,9 @@ public class TokenService {
     @Autowired
     private EntradaDao entradaDao;
 
+    @Autowired
+    private ColaEsperaService colaEsperaService;
+
     private static final long EXPIRATION_TIME_MILLIS = Token.DURACION_RESERVA_MILLIS;
 
     @Transactional
@@ -32,15 +38,24 @@ public class TokenService {
         if (token != null && token.getEntradas() != null) {
             logger.info("[AUDITORÍA] Expirando token de compra: {}. Liberando entradas asociadas.", token.getValor());
 
+            Set<Long> espectaculosLiberados = new HashSet<>();
+
             for (Entrada entrada : token.getEntradas()) {
                 if (entrada.getEstado() == Estado.RESERVADA) {
                     entrada.setEstado(Estado.DISPONIBLE);
                     entradaDao.save(entrada);
+                    if (entrada.getEspectaculo() != null) {
+                        espectaculosLiberados.add(entrada.getEspectaculo().getId());
+                    }
                 }
             }
 
             token.getEntradas().clear();
             tokenDao.delete(token);
+
+            for (Long espectaculoId : espectaculosLiberados) {
+                colaEsperaService.procesarColaSiAplica(espectaculoId);
+            }
         }
     }
 

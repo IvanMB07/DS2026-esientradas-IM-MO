@@ -28,6 +28,9 @@ public class ReservasService {
     @Autowired
     private UsuariosService usuariosService;
 
+    @Autowired
+    private ColaEsperaService colaEsperaService;
+
     @Transactional
     public String seleccionarEntrada(Long idEntrada, String compraToken, String userToken) {
         String emailActual = null;
@@ -58,6 +61,18 @@ public class ReservasService {
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Entrada no encontrada"));
 
         if (entrada.getEstado() != Estado.DISPONIBLE) {
+            Long espectaculoId = entrada.getEspectaculo().getId();
+            if (colaEsperaService.espectaculoTieneCola(espectaculoId) && emailActual != null) {
+                Integer posicion = colaEsperaService.unirseACola(espectaculoId, emailActual, compraToken);
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "No hay entradas disponibles. Te has unido a la cola de espera en posición " + posicion);
+            }
+
+            if (colaEsperaService.espectaculoTieneCola(espectaculoId)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "No hay entradas disponibles. Inicia sesión para unirte a la cola de espera");
+            }
+
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Entrada ya reservada");
         }
 
@@ -113,6 +128,33 @@ public class ReservasService {
         token.getEntradas().removeIf(e -> e.getId().equals(idEntrada));
         this.tokenDao.save(token);
         this.entradaDao.updateEstado(idEntrada, Estado.DISPONIBLE);
+
+        colaEsperaService.procesarColaSiAplica(entrada.getEspectaculo().getId());
+    }
+
+    public Map<String, Object> unirseCola(Long espectaculoId, String compraToken, String userToken) {
+        if (userToken == null || userToken.isBlank() || userToken.equals("null") || userToken.equals("undefined")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Debes iniciar sesión para entrar en la cola de espera");
+        }
+
+        String emailActual = usuariosService.checkToken(userToken);
+        Integer posicion = colaEsperaService.unirseACola(espectaculoId, emailActual, compraToken);
+
+        return Map.of(
+                "enCola", true,
+                "posicion", posicion,
+                "espectaculoId", espectaculoId);
+    }
+
+    public Map<String, Object> estadoCola(Long espectaculoId, String userToken) {
+        if (userToken == null || userToken.isBlank() || userToken.equals("null") || userToken.equals("undefined")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                    "Debes iniciar sesión para consultar la cola de espera");
+        }
+
+        String emailActual = usuariosService.checkToken(userToken);
+        return colaEsperaService.getEstadoCola(espectaculoId, emailActual);
     }
 
     public Token getResumenCompra(String tokenValor, String userToken) {

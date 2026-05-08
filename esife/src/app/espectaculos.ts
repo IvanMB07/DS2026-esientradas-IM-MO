@@ -53,4 +53,18 @@ export class EspectaculosService {
     );
   }
 
+  unirseCola(espectaculoId: number, compraToken: string | null, userToken: string) {
+    return this.http.post<any>('http://localhost:8080/reservas/cola/unirse', {
+      espectaculoId,
+      compraToken,
+      userToken
+    });
+  }
+
+  estadoCola(espectaculoId: number, userToken: string) {
+    return this.http.get<any>(
+      `http://localhost:8080/reservas/cola/estado?espectaculoId=${espectaculoId}&userToken=${encodeURIComponent(userToken)}`
+    );
+  }
+
 }
