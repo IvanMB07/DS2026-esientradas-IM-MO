@@ -1,7 +1,6 @@
 package edu.esi.ds.esientradas.http;
 
 import java.util.List;
-import java.util.Map;
 
 import jakarta.validation.Valid;
 
@@ -11,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import edu.esi.ds.esientradas.dto.CancelarRequest;
 import edu.esi.ds.esientradas.dto.SeleccionarRequest;
 import edu.esi.ds.esientradas.dto.UnirseColaRequest;
+import edu.esi.ds.esientradas.dto.ColaResponse;
+import edu.esi.ds.esientradas.dto.EstadoColaResponse;
 
 import edu.esi.ds.esientradas.model.Token;
 import edu.esi.ds.esientradas.services.ReservasService;
@@ -55,17 +56,26 @@ public class ReservasController {
     }
 
     @PostMapping("/cola/unirse")
-    public Map<String, Object> unirseCola(@Valid @RequestBody UnirseColaRequest payload) {
+    public ColaResponse unirseCola(@Valid @RequestBody UnirseColaRequest payload) {
         Long espectaculoId = payload.getEspectaculoId();
         String cToken = payload.getCompraToken();
         String uToken = payload.getUserToken();
 
-        return this.service.unirseCola(espectaculoId, cToken, uToken);
+        java.util.Map<String, Object> result = this.service.unirseCola(espectaculoId, cToken, uToken);
+        return new ColaResponse(
+                (Boolean) result.get("enCola"),
+                (Integer) result.get("posicion"),
+                (Long) result.get("espectaculoId"));
     }
 
     @GetMapping("/cola/estado")
-    public Map<String, Object> estadoCola(@RequestParam Long espectaculoId,
+    public EstadoColaResponse estadoCola(@RequestParam Long espectaculoId,
             @RequestParam String userToken) {
-        return this.service.estadoCola(espectaculoId, userToken);
+        java.util.Map<String, Object> result = this.service.estadoCola(espectaculoId, userToken);
+        return new EstadoColaResponse(
+                espectaculoId,
+                (Boolean) result.get("enCola"),
+                (Integer) result.get("posicion"),
+                (String) result.get("compraTokenAsignado"));
     }
 }

@@ -99,8 +99,19 @@ public class ExternalController {
         }
 
         try {
+            // Convertir EntradaData a Map<String, String> para el mediador
+            java.util.List<java.util.Map<String, String>> entradasMap = request.getEntradas().stream()
+                    .map(entrada -> {
+                        java.util.Map<String, String> map = new java.util.HashMap<>();
+                        map.put("id", entrada.getId().toString());
+                        map.put("artista", entrada.getArtista());
+                        map.put("precio", entrada.getPrecio().toString());
+                        return map;
+                    })
+                    .toList();
+
             // Delegar al mediador para procesar la compra completa
-            byte[] pdf = mediadorService.procesarCompraCompleta(request.getEmail(), request.getEntradas());
+            byte[] pdf = mediadorService.procesarCompraCompleta(request.getEmail(), entradasMap);
 
             // Retornar el PDF en Base64 para que esientradas lo almacene localmente
             return Base64.getEncoder().encodeToString(pdf);

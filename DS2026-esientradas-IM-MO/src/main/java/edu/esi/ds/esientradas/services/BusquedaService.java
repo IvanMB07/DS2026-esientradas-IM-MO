@@ -49,6 +49,12 @@ public class BusquedaService {
                 .toList();
     }
 
+    public List<edu.esi.ds.esientradas.dto.EntradaResponse> getEntradasResponse(Long espectaculoId) {
+        return this.entradaDao.findByEspectaculoId(espectaculoId).stream()
+                .map(this::toEntradaResponse)
+                .toList();
+    }
+
     public List<Espectaculo> getEspectaculos(Long idEscenario) {
         return this.espectaculoDao.findByEscenarioId(idEscenario);
     }
@@ -87,6 +93,23 @@ public class BusquedaService {
         }
 
         return map;
+    }
+
+    private edu.esi.ds.esientradas.dto.EntradaResponse toEntradaResponse(Entrada entrada) {
+        edu.esi.ds.esientradas.dto.EntradaResponse response = new edu.esi.ds.esientradas.dto.EntradaResponse();
+        response.setId(entrada.getId());
+        response.setPrecio(entrada.getPrecio());
+        response.setEstado(entrada.getEstado().toString());
+
+        if (entrada instanceof DeZona ez) {
+            response.setZona(ez.getZona());
+        } else if (entrada instanceof Precisa ep) {
+            response.setFila(ep.getFila());
+            response.setColumna(ep.getColumna());
+            response.setPlanta(ep.getPlanta());
+        }
+
+        return response;
     }
 
 }

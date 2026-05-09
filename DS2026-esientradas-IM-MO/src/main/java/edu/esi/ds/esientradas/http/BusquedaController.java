@@ -1,7 +1,6 @@
 package edu.esi.ds.esientradas.http;
 
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import edu.esi.ds.esientradas.dto.DtoEntradas;
 import edu.esi.ds.esientradas.dto.DtoEspectaculo;
+import edu.esi.ds.esientradas.dto.EntradaResponse;
 import edu.esi.ds.esientradas.model.Escenario;
 import edu.esi.ds.esientradas.model.Espectaculo;
 import edu.esi.ds.esientradas.services.BusquedaService;
@@ -26,13 +26,13 @@ public class BusquedaController {
     private BusquedaService service;
 
     @GetMapping("/getEntradas")
-    public List<Map<String, Object>> getEntradas(@RequestParam Long espectaculoId) {
-        return this.service.getEntradas(espectaculoId);
+    public List<EntradaResponse> getEntradas(@RequestParam Long espectaculoId) {
+        return this.service.getEntradasResponse(espectaculoId);
     }
 
     @GetMapping("/getNumeroDeEntradas")
-    public List<Map<String, Object>> getNumeroDeEntradas(@RequestParam Long espectaculoId) {
-        return this.service.getEntradas(espectaculoId);
+    public List<EntradaResponse> getNumeroDeEntradas(@RequestParam Long espectaculoId) {
+        return this.service.getEntradasResponse(espectaculoId);
     }
 
     @GetMapping("/getNumeroDeEntradasComoDto")

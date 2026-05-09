@@ -1,7 +1,7 @@
 package edu.esi.ds.esiusuarios.dto;
 
 import java.util.List;
-import java.util.Map;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -18,12 +18,13 @@ public class ProcesarCompraRequest {
     private String email;
     @NotNull
     @NotEmpty
-    private List<Map<String, String>> entradas;
+    @Valid
+    private List<EntradaData> entradas;
 
     public ProcesarCompraRequest() {
     }
 
-    public ProcesarCompraRequest(String email, List<Map<String, String>> entradas) {
+    public ProcesarCompraRequest(String email, List<EntradaData> entradas) {
         this.email = email;
         this.entradas = entradas;
     }
@@ -36,11 +37,11 @@ public class ProcesarCompraRequest {
         this.email = email;
     }
 
-    public List<Map<String, String>> getEntradas() {
+    public List<EntradaData> getEntradas() {
         return entradas;
     }
 
-    public void setEntradas(List<Map<String, String>> entradas) {
+    public void setEntradas(List<EntradaData> entradas) {
         this.entradas = entradas;
     }
 }

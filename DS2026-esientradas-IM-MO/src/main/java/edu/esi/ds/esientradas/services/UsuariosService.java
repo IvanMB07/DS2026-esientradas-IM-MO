@@ -106,7 +106,8 @@ public class UsuariosService {
 		} catch (RestClientException e) {
 			throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 					"Error de comunicación con el mediador en esiusuarios: " + e.getMessage());
-		}
-	}
 
+		}
+
+	}
 }

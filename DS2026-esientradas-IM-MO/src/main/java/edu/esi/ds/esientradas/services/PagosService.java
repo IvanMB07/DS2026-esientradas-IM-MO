@@ -106,7 +106,7 @@ public class PagosService {
             java.util.Map<String, String> entradaMap = new java.util.HashMap<>();
             entradaMap.put("artista", entrada.getEspectaculo().getArtista());
             entradaMap.put("id", entrada.getId().toString());
-            entradaMap.put("precio", (entrada.getPrecio() / 100.0) + "€");
+            entradaMap.put("precio", java.math.BigDecimal.valueOf(entrada.getPrecio(), 2).toPlainString());
             entradasData.add(entradaMap);
         }
 
