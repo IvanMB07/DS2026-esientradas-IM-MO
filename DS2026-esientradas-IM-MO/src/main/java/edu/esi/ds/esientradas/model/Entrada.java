@@ -13,10 +13,17 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
-import jakarta.persistence.Transient;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
+/**
+ * nombre_clase: Entrada
+ * parametros_clave: id, precio, espectaculo, estado
+ * funcion: entidad base de entrada vendible/reservable
+ * flujo_en_el_que_participa: busqueda -> reserva -> pago -> venta
+ * comunicacion: BusquedaService, ReservasService, PagosService, EntradaDao,
+ * subtipos DeZona/Precisa
+ */
 public abstract class Entrada {
     @Id
     @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)

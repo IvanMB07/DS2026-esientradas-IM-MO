@@ -33,6 +33,15 @@ public class TokenService {
 
     private static final long EXPIRATION_TIME_MILLIS = Token.DURACION_RESERVA_MILLIS;
 
+    /**
+     * nombre_metodo: liberarEntradasExpiredToken
+     * parametros: token
+     * funcion: libera entradas reservadas de un token caducado, elimina carrito y
+     * reactiva cola
+     * flujo_en_el_que_participa: limpieza de reservas expiradas
+     * comunicacion: EntradaDao.save, TokenDao.delete,
+     * ColaEsperaService.procesarColaSiAplica
+     */
     @Transactional
     public void liberarEntradasExpiredToken(Token token) {
         if (token != null && token.getEntradas() != null) {
@@ -59,6 +68,13 @@ public class TokenService {
         }
     }
 
+    /**
+     * nombre_metodo: liberarEntradasReservadas
+     * parametros: ninguno (ejecucion programada)
+     * funcion: detecta tokens caducados y ejecuta liberacion automatica
+     * flujo_en_el_que_participa: tarea scheduler de mantenimiento periodico
+     * comunicacion: TokenDao.findByHoraBefore, liberarEntradasExpiredToken
+     */
     @Scheduled(fixedRate = 60000) // Revisión cada minuto
     public void liberarEntradasReservadas() {
         long tiempoLimite = System.currentTimeMillis() - EXPIRATION_TIME_MILLIS;

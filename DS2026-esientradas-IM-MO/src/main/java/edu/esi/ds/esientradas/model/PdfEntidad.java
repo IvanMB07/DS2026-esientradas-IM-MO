@@ -4,6 +4,13 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
+/**
+ * nombre_clase: PdfEntidad
+ * parametros_clave: id, emailUsuario, fechaGeneracion, contenido
+ * funcion: persistencia local del comprobante PDF generado tras pago
+ * flujo_en_el_que_participa: registro historico de factura post-compra
+ * comunicacion: PagosService, PdfDao
+ */
 public class PdfEntidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

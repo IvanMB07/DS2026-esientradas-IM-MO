@@ -8,8 +8,24 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 
 @Service
+/**
+ * NOTA DE MANTENIMIENTO:
+ * Esta clase se mantiene por compatibilidad/documentacion, pero no forma parte
+ * del flujo activo.
+ * Motivo: la generacion y envio de PDF se delega actualmente al microservicio
+ * esiusuarios
+ * mediante UsuariosService.procesarCompraEnMediador(...) desde
+ * PagosService.confirmarPago(...).
+ */
 public class PdfService {
 
+    /**
+     * nombre_metodo: generarFactura
+     * parametros: email, entradas
+     * funcion: genera el PDF de resumen de compra con detalle de entradas y total
+     * flujo_en_el_que_participa: salida documental posterior a la compra
+     * comunicacion: libreria iText (Document, PdfWriter, PdfPTable)
+     */
     public byte[] generarFactura(String email, List<Entrada> entradas) {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Document document = new Document();

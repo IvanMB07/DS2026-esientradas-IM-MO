@@ -17,12 +17,23 @@ import jakarta.servlet.http.HttpSession;
 
 @RestController
 @RequestMapping("/compras")
+// Clave: CORS habilitado solo para el frontend de la practica.
 @CrossOrigin(origins = "http://localhost:4200")
 public class ComprasController {
 
     @Autowired
     private UsuariosService usuariosService;
 
+    /**
+     * nombre_metodo: comprar
+     * parametros: session, response, userToken
+     * funcion: valida token de usuario y confirma identidad para continuar compra
+     * flujo_en_el_que_participa: validacion de sesion en la fase de compra
+     * comunicacion: UsuariosService.checkToken -> esiusuarios
+     * /external/checkToken/{token}
+     * nota_mantenimiento: endpoint legado; el cierre de compra activo se ejecuta en
+     * /pagos/confirmar
+     */
     @PutMapping("/comprar")
     public String comprar(HttpSession session, HttpServletResponse response, @RequestParam String userToken)
             throws IOException {

@@ -11,7 +11,6 @@ import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.stripe.param.PaymentIntentCreateParams;
 
-import edu.esi.ds.esientradas.dao.EntradaDao;
 import edu.esi.ds.esientradas.dao.PdfDao;
 import edu.esi.ds.esientradas.dao.TokenDao;
 import edu.esi.ds.esientradas.model.Entrada;
@@ -32,11 +31,15 @@ public class PagosService {
     private UsuariosService usuariosService;
 
     @Autowired
-    private EntradaDao entradaDao;
-
-    @Autowired
     private PdfDao pdfDao;
 
+    /**
+     * nombre_metodo: prepararPago
+     * parametros: totalCentimos
+     * funcion: valida importe y crea PaymentIntent en Stripe
+     * flujo_en_el_que_participa: inicio del checkout antes de confirmar compra
+     * comunicacion: Stripe API (PaymentIntent.create)
+     */
     public String prepararPago(Long totalCentimos) throws StripeException {
         if (totalCentimos == null || totalCentimos <= 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -65,6 +68,15 @@ public class PagosService {
         }
     }
 
+    /**
+     * nombre_metodo: confirmarPago
+     * parametros: tokenReserva, tokenUsuario
+     * funcion: valida propiedad de reserva, marca entradas vendidas y delega
+     * factura al mediador
+     * flujo_en_el_que_participa: cierre transaccional del pago
+     * comunicacion: UsuariosService.checkToken/procesarCompraEnMediador, TokenDao,
+     * EntradaDao, PdfDao
+     */
     @Transactional
     public void confirmarPago(String tokenReserva, String tokenUsuario) {
         if (tokenReserva == null || tokenReserva.isBlank()) {

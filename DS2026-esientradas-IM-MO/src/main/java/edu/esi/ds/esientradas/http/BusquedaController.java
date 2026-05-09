@@ -25,27 +25,61 @@ public class BusquedaController {
     @Autowired
     private BusquedaService service;
 
+    /**
+     * nombre_metodo: getEntradas
+     * parametros: espectaculoId
+     * funcion: devuelve el listado de entradas de un espectaculo en formato de
+     * respuesta publica
+     * flujo_en_el_que_participa: exploracion de disponibilidad antes de reservar
+     */
     @GetMapping("/getEntradas")
     public List<EntradaResponse> getEntradas(@RequestParam Long espectaculoId) {
         return this.service.getEntradasResponse(espectaculoId);
     }
 
+    /**
+     * nombre_metodo: getNumeroDeEntradas
+     * parametros: espectaculoId
+     * funcion: devuelve entradas de espectaculo reutilizando el mismo contrato de
+     * respuesta
+     * flujo_en_el_que_participa: compatibilidad con consumidores legacy del
+     * frontend
+     */
     @GetMapping("/getNumeroDeEntradas")
     public List<EntradaResponse> getNumeroDeEntradas(@RequestParam Long espectaculoId) {
         return this.service.getEntradasResponse(espectaculoId);
     }
 
+    /**
+     * nombre_metodo: getNumeroDeEntradasComoDto
+     * parametros: espectaculoId
+     * funcion: devuelve un DTO agregado con metricas de entradas del espectaculo
+     * flujo_en_el_que_participa: visualizaciones resumidas de
+     * capacidad/disponibilidad
+     */
     @GetMapping("/getNumeroDeEntradasComoDto")
     public DtoEntradas getNumeroDeEntradasComoDto(@RequestParam Long espectaculoId) {
         DtoEntradas dto = (DtoEntradas) this.service.getNumeroDeEntradasComoDto(espectaculoId);
         return dto;
     }
 
+    /**
+     * nombre_metodo: getEntradasLibres
+     * parametros: espectaculoId
+     * funcion: obtiene el numero de entradas libres de un espectaculo
+     * flujo_en_el_que_participa: decision de compra en pantalla de detalle
+     */
     @GetMapping("/getEntradasLibres")
     public Integer getEntradasLibres(@RequestParam Long espectaculoId) {
         return this.service.getEntradasLibres(espectaculoId);
     }
 
+    /**
+     * nombre_metodo: getEspectaculos
+     * parametros: artista
+     * funcion: busca espectaculos por artista y los transforma a DTO de salida
+     * flujo_en_el_que_participa: busqueda principal de catalogo
+     */
     @GetMapping("/getEspectaculos")
     public List<DtoEspectaculo> getEspectaculos(@RequestParam String artista) {
         List<Espectaculo> espectaculos = this.service.getEspectaculos(artista);
@@ -61,11 +95,12 @@ public class BusquedaController {
         return dtos;
     }
 
-    @GetMapping("/test-error")
-    public void test() {
-        throw new RuntimeException("Error de prueba OWASP");
-    }
-
+    /**
+     * nombre_metodo: getEspectaculos
+     * parametros: idEscenario
+     * funcion: lista espectaculos asociados a un escenario concreto
+     * flujo_en_el_que_participa: navegacion por escenario en catalogo
+     */
     @GetMapping("/getEspectaculos/{idEscenario}")
     public List<DtoEspectaculo> getEspectaculos(@PathVariable Long idEscenario) {
         List<Espectaculo> espectaculos = this.service.getEspectaculos(idEscenario);
@@ -81,6 +116,12 @@ public class BusquedaController {
         return dtos;
     }
 
+    /**
+     * nombre_metodo: getEscenarios
+     * parametros: ninguno
+     * funcion: devuelve todos los escenarios disponibles
+     * flujo_en_el_que_participa: filtros de busqueda y seleccion de recinto
+     */
     @GetMapping("/getEscenarios")
     public List<Escenario> getEscenarios() {
         return this.service.getEscenarios();

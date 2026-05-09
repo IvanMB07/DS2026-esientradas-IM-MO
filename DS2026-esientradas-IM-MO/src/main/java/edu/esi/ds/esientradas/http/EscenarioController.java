@@ -26,6 +26,12 @@ public class EscenarioController {
     @Autowired
     private UsuariosService usuariosService;
 
+    /**
+     * nombre_metodo: insertar
+     * parametros: escenario, userToken
+     * funcion: valida rol ADMIN y crea un escenario nuevo
+     * flujo_en_el_que_participa: administracion de recintos para espectaculos
+     */
     @PostMapping("/insertar")
     public void insertar(@Valid @RequestBody Escenario escenario, @RequestParam String userToken) {
         // Validar token y que sea ADMIN
@@ -45,6 +51,12 @@ public class EscenarioController {
         this.service.insertar(escenario);
     }
 
+    /**
+     * nombre_metodo: eliminar
+     * parametros: id, userToken
+     * funcion: valida rol ADMIN y elimina un escenario existente
+     * flujo_en_el_que_participa: mantenimiento de recintos en administracion
+     */
     @DeleteMapping("/eliminar/{id}")
     public void eliminar(@PathVariable Long id, @RequestParam String userToken) {
         // Validar token y que sea ADMIN

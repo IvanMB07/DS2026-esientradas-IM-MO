@@ -31,6 +31,15 @@ public class ReservasService {
     @Autowired
     private ColaEsperaService colaEsperaService;
 
+    /**
+     * nombre_metodo: seleccionarEntrada
+     * parametros: idEntrada, compraToken, userToken
+     * funcion: selecciona una entrada para el carrito, crea/vincula token y deriva
+     * a cola si no hay disponibilidad
+     * flujo_en_el_que_participa: fase de reserva previa al pago
+     * comunicacion: UsuariosService.checkToken, TokenDao, EntradaDao,
+     * ColaEsperaService
+     */
     @Transactional
     public String seleccionarEntrada(Long idEntrada, String compraToken, String userToken) {
         String emailActual = null;
@@ -83,6 +92,14 @@ public class ReservasService {
         return token.getValor();
     }
 
+    /**
+     * nombre_metodo: cancelarEntrada
+     * parametros: idEntrada, compraToken, userToken
+     * funcion: valida propiedad del carrito y libera una entrada reservada
+     * flujo_en_el_que_participa: modificaciones del carrito antes de confirmar pago
+     * comunicacion: TokenDao, UsuariosService.checkToken, EntradaDao,
+     * ColaEsperaService.procesarColaSiAplica
+     */
     @Transactional
     public void cancelarEntrada(Long idEntrada, String compraToken, String userToken) {
         // 1. Obtener el token de compra
@@ -132,6 +149,14 @@ public class ReservasService {
         colaEsperaService.procesarColaSiAplica(entrada.getEspectaculo().getId());
     }
 
+    /**
+     * nombre_metodo: unirseCola
+     * parametros: espectaculoId, compraToken, userToken
+     * funcion: valida usuario y registra su incorporacion a cola de espera
+     * flujo_en_el_que_participa: alternativa de espera cuando un espectaculo se
+     * agota
+     * comunicacion: UsuariosService.checkToken, ColaEsperaService.unirseACola
+     */
     public Map<String, Object> unirseCola(Long espectaculoId, String compraToken, String userToken) {
         if (userToken == null || userToken.isBlank() || userToken.equals("null") || userToken.equals("undefined")) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
@@ -147,6 +172,13 @@ public class ReservasService {
                 "espectaculoId", espectaculoId);
     }
 
+    /**
+     * nombre_metodo: estadoCola
+     * parametros: espectaculoId, userToken
+     * funcion: devuelve posicion actual y token asignado (si existe) para la cola
+     * flujo_en_el_que_participa: seguimiento de espera por parte del usuario
+     * comunicacion: UsuariosService.checkToken, ColaEsperaService.getEstadoCola
+     */
     public Map<String, Object> estadoCola(Long espectaculoId, String userToken) {
         if (userToken == null || userToken.isBlank() || userToken.equals("null") || userToken.equals("undefined")) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
@@ -157,6 +189,14 @@ public class ReservasService {
         return colaEsperaService.getEstadoCola(espectaculoId, emailActual);
     }
 
+    /**
+     * nombre_metodo: getResumenCompra
+     * parametros: tokenValor, userToken
+     * funcion: retorna carrito validando acceso por propietario y realizando
+     * vinculacion si era anonimo
+     * flujo_en_el_que_participa: pantalla de resumen previa al pago
+     * comunicacion: TokenDao.findById/save, UsuariosService.checkToken
+     */
     public Token getResumenCompra(String tokenValor, String userToken) {
         // 1. Buscamos el carrito
         Token token = this.tokenDao.findById(tokenValor).orElseThrow(
@@ -186,6 +226,14 @@ public class ReservasService {
         return token;
     }
 
+    /**
+     * nombre_metodo: confirmarCompra
+     * parametros: compraToken, userToken
+     * funcion: valida permisos y marca todas las entradas del carrito como vendidas
+     * flujo_en_el_que_participa: confirmacion final de compra
+     * comunicacion: TokenDao.findById, UsuariosService.checkToken,
+     * EntradaDao.updateEstado
+     */
     @Transactional
     public void confirmarCompra(String compraToken, String userToken) {
         // Validar que el compraToken existe
@@ -213,6 +261,15 @@ public class ReservasService {
         // this.tokenDao.save(token);
     }
 
+    /**
+     * nombre_metodo: getCarritosDelUsuario
+     * parametros: userToken
+     * funcion: obtiene y filtra carritos del usuario autenticado con entradas
+     * activas
+     * flujo_en_el_que_participa: recuperacion de carritos al volver a la aplicacion
+     * comunicacion: UsuariosService.checkToken,
+     * TokenDao.findByEmailUsuarioOrderByHoraDesc
+     */
     public List<Token> getCarritosDelUsuario(String userToken) {
         // Obtener email del usuario desde el userToken
         if (userToken == null || userToken.isEmpty() || userToken.equals("null")

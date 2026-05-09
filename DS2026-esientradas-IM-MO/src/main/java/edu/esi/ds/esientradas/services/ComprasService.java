@@ -13,6 +13,14 @@ import edu.esi.ds.esientradas.model.Token;
 import jakarta.transaction.Transactional;
 
 @Service
+/**
+ * NOTA DE MANTENIMIENTO:
+ * Servicio legado conservado para trazabilidad academica.
+ * Estado actual: no tiene referencias activas en controllers/servicios del
+ * flujo principal.
+ * Motivo: la confirmacion funcional de compra se canaliza hoy por
+ * PagosService.confirmarPago(...).
+ */
 public class ComprasService {
 
     @Autowired
@@ -24,6 +32,15 @@ public class ComprasService {
     @Autowired
     private UsuariosService usuariosService;
 
+    /**
+     * nombre_metodo: comprar
+     * parametros: idEntrada, compraToken, userToken
+     * funcion: valida identidad y pertenencia de reserva antes de marcar la entrada
+     * como vendida
+     * flujo_en_el_que_participa: confirmacion funcional de compra por entrada
+     * comunicacion: UsuariosService.checkToken, EntradaDao.findById/updateEstado,
+     * TokenDao.findById
+     */
     @Transactional
     public String comprar(Long idEntrada, String compraToken, String userToken) {
         // 1. Verificar identidad del usuario (Token 1234 del diagrama)

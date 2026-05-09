@@ -13,6 +13,15 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class UsuariosService {
 
+	/**
+	 * nombre_metodo: checkToken
+	 * parametros: token
+	 * funcion: valida token de sesion contra el microservicio de usuarios y
+	 * devuelve email
+	 * flujo_en_el_que_participa: autenticacion backend en operaciones de
+	 * reserva/compra
+	 * comunicacion: HTTP GET a esiusuarios /external/checkToken/{token}
+	 */
 	public String checkToken(String token) {
 		// Asegurarse de que el puerto es el 8081 de esiusuarios
 		String endpoint = "http://localhost:8081/external/checkToken";
@@ -30,10 +39,11 @@ public class UsuariosService {
 	}
 
 	/**
-	 * Verifica si un usuario es ADMIN
-	 * 
-	 * @param userToken Token del usuario
-	 * @return true si es ADMIN, false en caso contrario
+	 * nombre_metodo: isAdmin
+	 * parametros: userToken
+	 * funcion: verifica si el token pertenece a un usuario con rol administrador
+	 * flujo_en_el_que_participa: autorizacion de endpoints de administracion
+	 * comunicacion: HTTP GET a esiusuarios /external/checkAdmin/{token}
 	 */
 	public boolean isAdmin(String userToken) {
 		String endpoint = "http://localhost:8081/external/checkAdmin";
@@ -47,10 +57,11 @@ public class UsuariosService {
 	}
 
 	/**
-	 * Obtiene el rol de un usuario
-	 * 
-	 * @param userToken Token del usuario
-	 * @return El rol del usuario (USER, ADMIN, etc) o null si no es válido
+	 * nombre_metodo: getRol
+	 * parametros: userToken
+	 * funcion: obtiene el rol textual asociado a un token de usuario
+	 * flujo_en_el_que_participa: decisiones de autorizacion basadas en rol
+	 * comunicacion: HTTP GET a esiusuarios /external/getRol/{token}
 	 */
 	public String getRol(String userToken) {
 		String endpoint = "http://localhost:8081/external/getRol";
@@ -63,6 +74,14 @@ public class UsuariosService {
 		}
 	}
 
+	/**
+	 * nombre_metodo: enviarPdfAExterno
+	 * parametros: name, email, pdfBytes
+	 * funcion: envia un PDF en Base64 al microservicio de usuarios para envio por
+	 * correo
+	 * flujo_en_el_que_participa: notificacion post-compra
+	 * comunicacion: HTTP POST a esiusuarios /external/sendEmailWithPdf
+	 */
 	public void enviarPdfAExterno(String name, String email, byte[] pdfBytes) {
 		String endpoint = "http://localhost:8081/external/sendEmailWithPdf";
 		RestTemplate restTemplate = new RestTemplate();
@@ -76,12 +95,12 @@ public class UsuariosService {
 	}
 
 	/**
-	 * Delega al mediador en esiusuarios el procesamiento completo de una compra
-	 * (generación de PDF, QR y envío de correo)
-	 * 
-	 * @param email        Email del usuario
-	 * @param entradasData Lista de datos de entradas
-	 * @return byte[] PDF generado (en Base64 desde esiusuarios)
+	 * nombre_metodo: procesarCompraEnMediador
+	 * parametros: email, entradasData
+	 * funcion: delega la post-compra al mediador de usuarios y devuelve PDF en
+	 * binario
+	 * flujo_en_el_que_participa: tramo inter-servicios despues de confirmar pago
+	 * comunicacion: HTTP POST a esiusuarios /external/procesarCompra
 	 */
 	public byte[] procesarCompraEnMediador(String email, List<Map<String, String>> entradasData) {
 		String endpoint = "http://localhost:8081/external/procesarCompra";

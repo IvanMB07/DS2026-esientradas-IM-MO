@@ -17,6 +17,14 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 @Entity
+/**
+ * nombre_clase: Espectaculo
+ * parametros_clave: id, artista, fecha, escenario, entradas
+ * funcion: representa un evento que se celebra en un escenario y contiene
+ * entradas
+ * flujo_en_el_que_participa: busqueda de eventos y gestion de catalogo admin
+ * comunicacion: EspectaculoDao, BusquedaService, Escenario, Entrada
+ */
 public class Espectaculo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -11,12 +11,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 
 @Entity
+/**
+ * nombre_clase: Escenario
+ * parametros_clave: id, nombre, descripcion, espectaculos
+ * funcion: define el recinto donde se celebran espectaculos
+ * flujo_en_el_que_participa: catalogo base para alta/busqueda de espectaculos
+ * comunicacion: EscenarioDao, Espectaculo
+ */
 public class Escenario {
-    @Id @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
     private String nombre;
     private String descripcion;
-    
+
     @OneToMany(mappedBy = "escenario")
     private List<Espectaculo> espectaculos = new ArrayList<>();
 
@@ -43,7 +51,7 @@ public class Escenario {
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
     }
-    
+
     @JsonIgnore
     public List<Espectaculo> getEspectaculos() {
         return espectaculos;
@@ -53,5 +61,4 @@ public class Escenario {
         this.espectaculos = espectaculos;
     }
 
-    
 }

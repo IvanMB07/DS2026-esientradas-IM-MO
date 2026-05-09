@@ -11,6 +11,16 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 @Entity
+/**
+ * nombre_clase: ColaEspera
+ * parametros_clave: espectaculo, emailUsuario, compraTokenPreferido,
+ * compraTokenAsignado, estado
+ * funcion: registra el estado de espera de usuarios cuando no hay entradas
+ * disponibles
+ * flujo_en_el_que_participa: cola de asignacion automatica tras
+ * cancelaciones/caducidades
+ * comunicacion: ColaEsperaService, ColaEsperaDao, Token
+ */
 public class ColaEspera {
 
     @Id

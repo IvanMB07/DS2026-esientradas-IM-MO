@@ -15,6 +15,14 @@ public class EspectaculoService {
     @Autowired
     private EspectaculoDao dao;
 
+    /**
+     * nombre_metodo: insertar
+     * parametros: espectaculo
+     * funcion: persiste un nuevo espectaculo en base de datos y traduce errores de
+     * integridad
+     * flujo_en_el_que_participa: alta de catalogo desde endpoints de administracion
+     * comunicacion: EspectaculoDao.save
+     */
     public void insertar(Espectaculo espectaculo) {
         try {
             this.dao.save(espectaculo);
@@ -27,6 +35,14 @@ public class EspectaculoService {
         }
     }
 
+    /**
+     * nombre_metodo: eliminar
+     * parametros: id
+     * funcion: valida existencia y elimina un espectaculo controlando dependencias
+     * relacionadas
+     * flujo_en_el_que_participa: mantenimiento de catalogo por administracion
+     * comunicacion: EspectaculoDao.existsById, EspectaculoDao.deleteById
+     */
     public void eliminar(Long id) {
         try {
             if (!this.dao.existsById(id)) {

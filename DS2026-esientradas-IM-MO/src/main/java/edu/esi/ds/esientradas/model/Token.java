@@ -12,6 +12,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 
 @Entity
+/**
+ * nombre_clase: Token
+ * parametros_clave: valor, hora, sessionId, emailUsuario, entradas
+ * funcion: representa el carrito/reserva temporal que agrupa entradas durante
+ * la compra
+ * flujo_en_el_que_participa: reserva -> resumen -> pago -> expiracion
+ * automatica
+ * comunicacion: ReservasService, PagosService, TokenService, TokenDao, Entrada
+ */
 public class Token {
     public static final long DURACION_RESERVA_MILLIS = 600000L;
 
@@ -72,7 +81,12 @@ public class Token {
         this.entradas = entradas;
     }
 
-    // Reemplaza setEntrada por addEntrada para manejar la lista
+    /**
+     * nombre_metodo: addEntrada
+     * parametros: entrada
+     * funcion: agrega una entrada al carrito asociado al token
+     * flujo_en_el_que_participa: seleccion de entradas en reservas
+     */
     public void addEntrada(Entrada entrada) {
         this.entradas.add(entrada);
     }

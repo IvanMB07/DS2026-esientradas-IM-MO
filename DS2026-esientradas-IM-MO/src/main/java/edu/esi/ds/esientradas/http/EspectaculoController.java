@@ -26,6 +26,12 @@ public class EspectaculoController {
     @Autowired
     private UsuariosService usuariosService;
 
+    /**
+     * nombre_metodo: insertar
+     * parametros: espectaculo, userToken
+     * funcion: valida rol ADMIN y crea un nuevo espectaculo
+     * flujo_en_el_que_participa: administracion de catalogo de espectaculos
+     */
     @PostMapping("/insertar")
     public void insertar(@Valid @RequestBody Espectaculo espectaculo, @RequestParam String userToken) {
         // Validar token y que sea ADMIN
@@ -50,6 +56,12 @@ public class EspectaculoController {
         this.service.insertar(espectaculo);
     }
 
+    /**
+     * nombre_metodo: eliminar
+     * parametros: id, userToken
+     * funcion: valida rol ADMIN y elimina un espectaculo existente
+     * flujo_en_el_que_participa: mantenimiento de catalogo por administracion
+     */
     @DeleteMapping("/eliminar/{id}")
     public void eliminar(@PathVariable Long id, @RequestParam String userToken) {
         // Validar token y que sea ADMIN

@@ -19,6 +19,13 @@ public class Security {
         // Añadimos el logger para el registro interno (OWASP A09/A10)
         private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+        /**
+         * nombre_metodo: handleResponseStatusException
+         * parametros: ex
+         * funcion: normaliza respuestas HTTP controladas con mensajes opacos para
+         * cliente
+         * flujo_en_el_que_participa: capa transversal de manejo de errores funcionales
+         */
         @ExceptionHandler(ResponseStatusException.class)
         public ResponseEntity<Map<String, Object>> handleResponseStatusException(ResponseStatusException ex) {
             logger.warn("[ERROR HTTP] {} - {}", ex.getStatusCode(), ex.getReason());
@@ -39,6 +46,14 @@ public class Security {
             return new ResponseEntity<>(response, status);
         }
 
+        /**
+         * nombre_metodo: handleAllExceptions
+         * parametros: ex
+         * funcion: captura errores no controlados, registra detalle interno y devuelve
+         * 500 generico
+         * flujo_en_el_que_participa: ultima barrera de estabilidad y opacidad de
+         * errores
+         */
         @ExceptionHandler(Exception.class)
         public ResponseEntity<Map<String, Object>> handleAllExceptions(Exception ex) {
             // 1. Registro interno detallado para los administradores

@@ -39,6 +39,14 @@ public class ColaEsperaService {
     @Autowired
     private TokenDao tokenDao;
 
+    /**
+     * nombre_metodo: espectaculoTieneCola
+     * parametros: espectaculoId
+     * funcion: determina si un espectaculo pertenece al escenario configurado con
+     * cola de espera
+     * flujo_en_el_que_participa: decision de activar logica de cola en reservas
+     * comunicacion: EspectaculoDao.findById
+     */
     public boolean espectaculoTieneCola(Long espectaculoId) {
         Optional<Espectaculo> espectaculo = espectaculoDao.findById(espectaculoId);
         if (espectaculo.isEmpty() || espectaculo.get().getEscenario() == null) {
@@ -47,6 +55,15 @@ public class ColaEsperaService {
         return ESCENARIO_COLA_ID.equals(espectaculo.get().getEscenario().getId());
     }
 
+    /**
+     * nombre_metodo: unirseACola
+     * parametros: espectaculoId, emailUsuario, compraTokenPreferido
+     * funcion: inserta al usuario en cola si no estaba ya y devuelve su posicion
+     * actual
+     * flujo_en_el_que_participa: registro de espera cuando no hay entradas libres
+     * comunicacion: ColaEsperaDao, EspectaculoDao, normalizarToken,
+     * calcularPosicion
+     */
     @Transactional
     public Integer unirseACola(Long espectaculoId, String emailUsuario, String compraTokenPreferido) {
         if (!espectaculoTieneCola(espectaculoId)) {
@@ -79,6 +96,14 @@ public class ColaEsperaService {
         return calcularPosicion(item);
     }
 
+    /**
+     * nombre_metodo: getEstadoCola
+     * parametros: espectaculoId, emailUsuario
+     * funcion: devuelve estado resumido de cola (en cola, posicion, token asignado)
+     * flujo_en_el_que_participa: consulta periodica del usuario en pantalla de
+     * espera
+     * comunicacion: ColaEsperaDao.findFirst..., calcularPosicion
+     */
     public Map<String, Object> getEstadoCola(Long espectaculoId, String emailUsuario) {
         Map<String, Object> estado = new HashMap<>();
         estado.put("espectaculoId", espectaculoId);
@@ -103,6 +128,15 @@ public class ColaEsperaService {
         return estado;
     }
 
+    /**
+     * nombre_metodo: procesarColaSiAplica
+     * parametros: espectaculoId
+     * funcion: atiende cola asignando entradas libres a usuarios en orden de
+     * llegada
+     * flujo_en_el_que_participa: reasignacion automatica tras
+     * cancelaciones/caducidades
+     * comunicacion: EntradaDao, ColaEsperaDao, TokenDao, resolverTokenParaCola
+     */
     @Transactional
     public int procesarColaSiAplica(Long espectaculoId) {
         if (!espectaculoTieneCola(espectaculoId)) {
@@ -136,6 +170,14 @@ public class ColaEsperaService {
         return atendidos;
     }
 
+    /**
+     * nombre_metodo: resolverTokenParaCola
+     * parametros: item
+     * funcion: reutiliza token preferido compatible o crea uno nuevo para la
+     * asignacion
+     * flujo_en_el_que_participa: puente entre cola de espera y carrito de compra
+     * comunicacion: TokenDao.findById/save
+     */
     private Token resolverTokenParaCola(ColaEspera item) {
         String tokenPreferido = normalizarToken(item.getCompraTokenPreferido());
         if (tokenPreferido != null) {
@@ -157,6 +199,14 @@ public class ColaEsperaService {
         return tokenDao.save(tokenNuevo);
     }
 
+    /**
+     * nombre_metodo: calcularPosicion
+     * parametros: item
+     * funcion: calcula posicion del usuario dentro de la cola ordenada
+     * flujo_en_el_que_participa: feedback de estado para el usuario en espera
+     * comunicacion:
+     * ColaEsperaDao.findByEspectaculoIdAndEstadoOrderByHoraSolicitudAscIdAsc
+     */
     private Integer calcularPosicion(ColaEspera item) {
         List<ColaEspera> cola = colaEsperaDao.findByEspectaculoIdAndEstadoOrderByHoraSolicitudAscIdAsc(
                 item.getEspectaculo().getId(), EstadoCola.EN_COLA);
@@ -170,6 +220,14 @@ public class ColaEsperaService {
         return 0;
     }
 
+    /**
+     * nombre_metodo: normalizarToken
+     * parametros: compraToken
+     * funcion: limpia valores vacios o marcadores de frontend para tratarlos como
+     * nulos
+     * flujo_en_el_que_participa: validacion de entrada antes de buscar/reusar token
+     * comunicacion: ningun componente externo (utilidad interna)
+     */
     private String normalizarToken(String compraToken) {
         if (compraToken == null || compraToken.isBlank() || "null".equals(compraToken)
                 || "undefined".equals(compraToken)) {

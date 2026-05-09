@@ -83,8 +83,9 @@
 }
 
 .btn-nav:hover {
-    background-color: var(--color-primary-light);
-    color: white;
+    background-color: rgba(46, 125, 50, 0.12);
+    color: var(--color-primary-dark);
+    transform: translateY(-1px);
 }
 
 /* OVERRIDE GLOBAL BOTONES */

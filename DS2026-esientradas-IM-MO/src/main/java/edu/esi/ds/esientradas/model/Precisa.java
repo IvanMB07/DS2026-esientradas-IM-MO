@@ -1,13 +1,19 @@
 package edu.esi.ds.esientradas.model;
 
-
 import jakarta.persistence.Entity;
 
 @Entity
+/**
+ * nombre_clase: Precisa
+ * parametros_clave: fila, columna, planta
+ * funcion: subtipo de entrada con asiento exacto
+ * flujo_en_el_que_participa: seleccion detallada de asiento
+ * comunicacion: Entrada, BusquedaService
+ */
 public class Precisa extends Entrada {
     private int fila, columna, planta;
 
-    public Precisa() { 
+    public Precisa() {
         super();
     }
 

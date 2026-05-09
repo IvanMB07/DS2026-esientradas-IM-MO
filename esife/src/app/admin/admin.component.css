@@ -322,7 +322,9 @@
 
 .tab-button:hover {
     border-color: var(--color-primary);
-    background-color: rgba(15, 118, 110, 0.05);
+    background-color: rgba(15, 118, 110, 0.12);
+    color: var(--color-primary-dark);
+    transform: translateY(-1px);
 }
 
 .tab-button.active {
