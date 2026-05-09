@@ -317,28 +317,42 @@ export class AdminComponent implements OnInit {
       return;
     }
 
-    const token = this.auth.getToken();
-    this.http.delete(
-      `${this.escenarioUrl}/eliminar/${escenario.id}?userToken=${token}`
-    ).subscribe({
-      next: () => {
-        this.mostrarMensaje(`Escenario "${escenario.nombre}" eliminado exitosamente`, 'success');
-        if (escenario.id && this.escenarioExpandidoId === escenario.id) {
-          this.escenarioExpandidoId = null;
-        }
-        this.loadEscenarios();
-      },
-      error: (err) => {
-        console.error('Error al eliminar escenario:', err);
-        const errorMsg = this.extraerMensajeError(err, 'Error al eliminar el escenario');
-        if (errorMsg.toLowerCase().includes('espectáculos asociados')) {
+    if (!escenario.id) {
+      this.mostrarMensaje('El escenario seleccionado no es válido', 'error');
+      return;
+    }
+
+    this.http.get<EspectaculoEscenarioItem[]>(`${this.busquedaUrl}/getEspectaculos/${escenario.id}`).subscribe({
+      next: (espectaculos) => {
+        if (espectaculos.length > 0) {
           this.mostrarMensaje(
-            'No se puede eliminar el escenario porque tiene espectáculos asociados. Expande el escenario y elimina primero esos espectáculos.',
+            'No se puede eliminar el escenario porque tiene espectáculos asociados. Elimina primero esos espectáculos o asígnalos a otro escenario.',
             'error'
           );
           return;
         }
-        this.mostrarMensaje(errorMsg, 'error');
+
+        const token = this.auth.getToken();
+        this.http.delete(
+          `${this.escenarioUrl}/eliminar/${escenario.id}?userToken=${token}`
+        ).subscribe({
+          next: () => {
+            this.mostrarMensaje(`Escenario "${escenario.nombre}" eliminado exitosamente`, 'success');
+            if (this.escenarioExpandidoId === escenario.id) {
+              this.escenarioExpandidoId = null;
+            }
+            this.loadEscenarios();
+          },
+          error: (err) => {
+            console.error('Error al eliminar escenario:', err);
+            const errorMsg = this.extraerMensajeError(err, 'Error al eliminar el escenario');
+            this.mostrarMensaje(errorMsg, 'error');
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error al comprobar espectáculos del escenario:', err);
+        this.mostrarMensaje(this.extraerMensajeError(err, 'No se pudo comprobar si el escenario tiene espectáculos'), 'error');
       }
     });
   }

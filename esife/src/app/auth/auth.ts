@@ -418,7 +418,8 @@ export class AuthComponent implements OnInit, OnDestroy {
         if (err.status === 409) {
           this.mensaje = 'Error: El usuario ya existe';
         } else if (err.status === 422) {
-          this.mensaje = 'Error: ' + (err.error.message || 'La contraseña no cumple los requisitos del servidor');
+          const validationMessage = err.error?.errors?.find((item: any) => item.field?.startsWith('pwd'))?.message;
+          this.mensaje = 'Error: ' + (validationMessage || 'La contraseña debe tener al menos 8 caracteres, una mayúscula, incluir un número y un símbolo (@#$%^&+=!._-)');
         } else {
           this.mensaje = 'Error en el registro';
         }

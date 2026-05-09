@@ -1,7 +1,5 @@
 package edu.esi.ds.esientradas.http;
 
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +12,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.stripe.exception.StripeException;
+import jakarta.validation.Valid;
 
+import edu.esi.ds.esientradas.dto.PreparePaymentRequest;
 import edu.esi.ds.esientradas.services.PagosService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,15 +31,15 @@ public class PagosController {
     private String stripePublishableKey;
 
     @PostMapping("/prepararPago")
-    public String prepararPago(@RequestBody Map<String, Object> infoPago) throws StripeException {
+    public String prepararPago(@Valid @RequestBody PreparePaymentRequest infoPago) throws StripeException {
         Long centimos = null;
 
-        if (infoPago.get("centimos") != null) {
-            centimos = ((Number) infoPago.get("centimos")).longValue();
-        } else if (infoPago.get("totalCentimos") != null) {
-            centimos = ((Number) infoPago.get("totalCentimos")).longValue();
-        } else if (infoPago.get("monto") != null) {
-            centimos = ((Number) infoPago.get("monto")).longValue();
+        if (infoPago.getCentimos() != null) {
+            centimos = infoPago.getCentimos();
+        } else if (infoPago.getTotalCentimos() != null) {
+            centimos = infoPago.getTotalCentimos();
+        } else if (infoPago.getMonto() != null) {
+            centimos = infoPago.getMonto();
         }
 
         if (centimos == null || centimos <= 0) {

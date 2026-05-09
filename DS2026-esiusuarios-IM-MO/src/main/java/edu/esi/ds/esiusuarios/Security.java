@@ -38,13 +38,14 @@ public class Security {
         }
 
         /**
-         * CAPTURA: Fallos en las anotaciones de validación (@Email, @Size, @NotBlank).
-         * RESULTADO: 400 Bad Request.
+         * CAPTURA: Fallos en las anotaciones de validación
+         * (@Email, @Size, @NotBlank, @Pattern).
+         * RESULTADO: 422 Unprocessable Entity.
          */
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
             Map<String, Object> response = new HashMap<>();
-            response.put("status", HttpStatus.BAD_REQUEST.value());
+            response.put("status", HttpStatus.UNPROCESSABLE_ENTITY.value());
             response.put("error", "Los datos enviados no cumplen con el formato requerido");
             response.put("timestamp", LocalDateTime.now());
 
@@ -58,7 +59,7 @@ public class Security {
                     .collect(Collectors.toList());
             response.put("errors", errors);
 
-            return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(response, HttpStatus.UNPROCESSABLE_ENTITY);
         }
 
         /**

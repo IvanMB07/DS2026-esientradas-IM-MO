@@ -3,8 +3,14 @@ package edu.esi.ds.esientradas.http;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import edu.esi.ds.esientradas.dto.CancelarRequest;
+import edu.esi.ds.esientradas.dto.SeleccionarRequest;
+import edu.esi.ds.esientradas.dto.UnirseColaRequest;
 
 import edu.esi.ds.esientradas.model.Token;
 import edu.esi.ds.esientradas.services.ReservasService;
@@ -18,19 +24,19 @@ public class ReservasController {
     private ReservasService service;
 
     @PostMapping("/seleccionar")
-    public String seleccionar(@RequestBody Map<String, Object> payload) {
-        Long idEntrada = Long.parseLong(payload.get("idEntrada").toString());
-        String cToken = payload.get("compraToken") != null ? payload.get("compraToken").toString() : null;
-        String uToken = payload.get("userToken") != null ? payload.get("userToken").toString() : null;
+    public String seleccionar(@Valid @RequestBody SeleccionarRequest payload) {
+        Long idEntrada = payload.getIdEntrada();
+        String cToken = payload.getCompraToken();
+        String uToken = payload.getUserToken();
 
         return this.service.seleccionarEntrada(idEntrada, cToken, uToken);
     }
 
     @PostMapping("/cancelar")
-    public void cancelar(@RequestBody Map<String, Object> payload) {
-        Long idEntrada = Long.parseLong(payload.get("idEntrada").toString());
-        String cToken = payload.get("compraToken").toString();
-        String uToken = payload.get("userToken") != null ? payload.get("userToken").toString() : null;
+    public void cancelar(@Valid @RequestBody CancelarRequest payload) {
+        Long idEntrada = payload.getIdEntrada();
+        String cToken = payload.getCompraToken();
+        String uToken = payload.getUserToken();
 
         this.service.cancelarEntrada(idEntrada, cToken, uToken);
     }
@@ -49,10 +55,10 @@ public class ReservasController {
     }
 
     @PostMapping("/cola/unirse")
-    public Map<String, Object> unirseCola(@RequestBody Map<String, Object> payload) {
-        Long espectaculoId = Long.parseLong(payload.get("espectaculoId").toString());
-        String cToken = payload.get("compraToken") != null ? payload.get("compraToken").toString() : null;
-        String uToken = payload.get("userToken") != null ? payload.get("userToken").toString() : null;
+    public Map<String, Object> unirseCola(@Valid @RequestBody UnirseColaRequest payload) {
+        Long espectaculoId = payload.getEspectaculoId();
+        String cToken = payload.getCompraToken();
+        String uToken = payload.getUserToken();
 
         return this.service.unirseCola(espectaculoId, cToken, uToken);
     }

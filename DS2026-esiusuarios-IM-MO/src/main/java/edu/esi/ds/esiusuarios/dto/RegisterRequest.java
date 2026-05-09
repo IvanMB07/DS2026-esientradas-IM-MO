@@ -2,18 +2,21 @@ package edu.esi.ds.esiusuarios.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class RegisterRequest {
     @NotBlank
-    @Email
+    @Email(message = "El formato del email no es válido.")
     @Size(max = 100)
     private String email;
     @NotBlank
     @Size(min = 8, max = 128)
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!._-])(?=\\S+$).{8,}$", message = "La contraseña debe tener al menos 8 caracteres, una mayúscula, incluir un número y un símbolo (@#$%^&+=!._-)")
     private String pwd1;
     @NotBlank
     @Size(min = 8, max = 128)
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!._-])(?=\\S+$).{8,}$", message = "La contraseña debe tener al menos 8 caracteres, una mayúscula, incluir un número y un símbolo (@#$%^&+=!._-)")
     private String pwd2;
 
     // Getters y Setters

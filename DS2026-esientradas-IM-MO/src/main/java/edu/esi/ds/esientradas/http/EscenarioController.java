@@ -1,5 +1,6 @@
 package edu.esi.ds.esientradas.http;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,7 +27,7 @@ public class EscenarioController {
     private UsuariosService usuariosService;
 
     @PostMapping("/insertar")
-    public void insertar(@RequestBody Escenario escenario, @RequestParam String userToken) {
+    public void insertar(@Valid @RequestBody Escenario escenario, @RequestParam String userToken) {
         // Validar token y que sea ADMIN
         if (!usuariosService.isAdmin(userToken)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
