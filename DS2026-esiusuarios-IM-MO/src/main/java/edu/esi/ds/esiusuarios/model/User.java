@@ -8,6 +8,12 @@ import jakarta.persistence.EnumType;
 
 import java.time.LocalDateTime; // Necesario para la fecha de caducidad
 
+/**
+ * nombre_clase: User
+ * funcion: entidad de usuario
+ * flujo_en_el_que_participa: persistencia y gestión de usuarios
+ * comunicacion: base de datos SQL Server
+ */
 @Entity
 @Table(name = "usuarios") // Nombre de la tabla en SQL Server
 public class User {

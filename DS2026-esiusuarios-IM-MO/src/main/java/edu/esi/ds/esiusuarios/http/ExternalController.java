@@ -25,6 +25,14 @@ import jakarta.mail.MessagingException;
 
 @CrossOrigin(origins = "http://localhost:4200") // Limitado al frontend Angular local.
 @RestController
+/**
+ * nombre_clase: ExternalController
+ * funcion: control de endpoints externos para comunicación con otros
+ * microservicios
+ * flujo_en_el_que_participa: validación de tokens, envío de correos,
+ * procesamiento de compras
+ * comunicacion: esientradas, frontend Angular
+ */
 @RequestMapping("/external")
 public class ExternalController {
 
@@ -43,6 +51,12 @@ public class ExternalController {
     // @Autowired
     // private EmailService emailService;
 
+    /**
+     * nombre_metodo: checkToken
+     * parametros: token
+     * funcion: valida token y devuelve email asociado
+     * flujo_en_el_que_participa: validación de sesión
+     */
     @GetMapping("/checkToken/{token}")
     public String checkToken(@PathVariable String token) {
         // 1. Validamos que el token no venga vacío
@@ -63,6 +77,12 @@ public class ExternalController {
         return email;
     }
 
+    /**
+     * nombre_metodo: sendEmailWithPdf
+     * parametros: request
+     * funcion: envía email con PDF adjunto
+     * flujo_en_el_que_participa: envío de correos
+     */
     @PostMapping("/sendEmailWithPdf")
     public void sendEmailWithPdf(@Valid @RequestBody EmailRequest request) throws MessagingException {
         byte[] pdfBytes = Base64.getDecoder().decode(request.getPdfBase64());
@@ -81,6 +101,12 @@ public class ExternalController {
         // this.emailService.sendEmail(request.getEmail(), "Tus Entradas", pdfBytes);
     }
 
+    /**
+     * nombre_metodo: procesarCompra
+     * parametros: request
+     * funcion: procesa compra completa (factura, QR, email)
+     * flujo_en_el_que_participa: procesamiento de compras
+     */
     /**
      * Procesa una compra completa (genera factura, QR, y envía por correo)
      * Endpoint delegado desde esientradas a través del mediador

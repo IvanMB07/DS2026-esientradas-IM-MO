@@ -4,6 +4,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * nombre_clase: EmailRequest
+ * funcion: objeto de transferencia para envío de email con PDF
+ * flujo_en_el_que_participa: envío de correos
+ * comunicacion: controladores y servicios
+ */
 public class EmailRequest {
     @NotBlank
     @Email

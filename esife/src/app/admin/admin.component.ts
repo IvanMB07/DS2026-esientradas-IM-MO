@@ -37,6 +37,12 @@ export interface EspectaculoEscenarioItem {
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
+/**
+ * nombre_clase: AdminComponent
+ * funcion: componente para gestión administrativa de usuarios y espectáculos
+ * flujo_en_el_que_participa: administración del sistema
+ * comunicacion: backend de usuarios y entradas
+ */
 export class AdminComponent implements OnInit {
   usuarios: AdminUser[] = [];
   isLoading = true;

@@ -4,6 +4,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * nombre_clase: AdminAuthRequest
+ * funcion: objeto de transferencia para autenticación de administrador
+ * flujo_en_el_que_participa: operaciones administrativas
+ * comunicacion: controladores y servicios
+ */
 public class AdminAuthRequest {
     @NotBlank
     @Email

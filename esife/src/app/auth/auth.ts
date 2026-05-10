@@ -13,6 +13,12 @@ type AuthMode = 'login' | 'register' | 'forgot-password' | 'reset-password';
   templateUrl: './auth.html',
   styleUrl: './auth.css'
 })
+/**
+ * nombre_clase: AuthComponent
+ * funcion: componente para login, registro y recuperación de contraseña
+ * flujo_en_el_que_participa: autenticación de usuarios
+ * comunicacion: servicio Auth, backend de usuarios
+ */
 export class AuthComponent implements OnInit, OnDestroy {
   private readonly maxLoginAttempts = 5;
 

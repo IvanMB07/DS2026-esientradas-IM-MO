@@ -2,6 +2,12 @@ package edu.esi.ds.esientradas.dto;
 
 import java.time.LocalDateTime;
 
+/**
+ * nombre_clase: DtoEspectaculo
+ * funcion: objeto de transferencia de datos para información de espectáculos
+ * flujo_en_el_que_participa: comunicación entre capas
+ * comunicacion: servicios y controladores
+ */
 public class DtoEspectaculo {
 
     private Long id;
@@ -10,7 +16,7 @@ public class DtoEspectaculo {
     private String escenario;
 
     // --- Getters ---
-    public Long getId(){
+    public Long getId() {
         return id;
     }
 
@@ -27,7 +33,7 @@ public class DtoEspectaculo {
     }
 
     // --- Setters ---
-    public void setId(Long id){
+    public void setId(Long id) {
         this.id = id;
     }
 

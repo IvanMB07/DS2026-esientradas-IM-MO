@@ -15,8 +15,18 @@ import java.util.Map;
  * No tiene dependencias del modelo de esientradas
  */
 @Service
+/**
+ * NOTA DE MANTENIMIENTO:
+ * Clase en uso activo en el flujo principal de generación de facturas.
+ */
 public class PdfService {
 
+    /**
+     * nombre_metodo: generarFactura
+     * parametros: email, entradasData
+     * funcion: genera PDF de factura con datos de entradas
+     * flujo_en_el_que_participa: generación de facturas
+     */
     /**
      * Genera un PDF de factura con los datos proporcionados
      * 

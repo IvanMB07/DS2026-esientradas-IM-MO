@@ -4,6 +4,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * nombre_clase: ChangePasswordRequest
+ * funcion: objeto de transferencia para cambio de contraseña
+ * flujo_en_el_que_participa: gestión de contraseña
+ * comunicacion: controladores y servicios
+ */
 public class ChangePasswordRequest {
     @NotBlank
     @Email

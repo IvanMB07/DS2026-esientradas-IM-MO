@@ -14,11 +14,24 @@ import java.util.Collections;
 
 @Service
 @Primary // <--- IMPORTANTE: Esto le dice a Spring que use este y NO el Falso
+/**
+ * nombre_clase: EmailServiceBrevo
+ * funcion: envío de correos electrónicos utilizando la API de Brevo
+ * flujo_en_el_que_participa: notificaciones de registro, recuperación de
+ * contraseña, envío de facturas
+ * comunicacion: API de Brevo
+ */
 public class EmailServiceBrevo extends EmailService {
 
     @Value("${brevo.api.key:}")
     private String brevoApiKey;
 
+    /**
+     * nombre_metodo: sendEmail
+     * parametros: destinatario, params
+     * funcion: envía email con adjunto PDF usando Brevo
+     * flujo_en_el_que_participa: envío de facturas
+     */
     @Override
     public void sendEmail(String destinatario, Object... params) {
         String asunto = (String) params[0];

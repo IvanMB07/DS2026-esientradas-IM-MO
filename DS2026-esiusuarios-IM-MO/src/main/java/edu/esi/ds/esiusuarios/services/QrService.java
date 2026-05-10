@@ -15,11 +15,22 @@ import java.util.Base64;
  * Formato: PNG de 300x300 píxeles
  */
 @Service
+/**
+ * NOTA DE MANTENIMIENTO:
+ * Clase en uso activo en el flujo principal de generación de códigos QR para
+ * tickets.
+ */
 public class QrService {
 
     private static final int QR_SIZE = 300;
     private static final String IMAGE_FORMAT = "png";
 
+    /**
+     * nombre_metodo: generarCodigoQr
+     * parametros: datos
+     * funcion: genera código QR a partir de datos
+     * flujo_en_el_que_participa: generación de códigos QR
+     */
     /**
      * Genera un código QR a partir de datos
      * 
@@ -52,6 +63,12 @@ public class QrService {
     }
 
     /**
+     * nombre_metodo: generarCodigoQrBase64
+     * parametros: datos
+     * funcion: genera código QR en formato Base64
+     * flujo_en_el_que_participa: envío de códigos QR por email
+     */
+    /**
      * Genera un código QR en formato Base64
      * Útil para enviar por correo o mostrar en HTML
      * 
@@ -64,6 +81,12 @@ public class QrService {
         return "data:image/png;base64," + base64;
     }
 
+    /**
+     * nombre_metodo: construirDatosQr
+     * parametros: entradasData
+     * funcion: construye string de datos para codificar en QR
+     * flujo_en_el_que_participa: preparación de QR
+     */
     /**
      * Construye un string con los datos de las entradas para codificar en el QR
      * Formato: ID1|artista1|precio1#ID2|artista2|precio2#...

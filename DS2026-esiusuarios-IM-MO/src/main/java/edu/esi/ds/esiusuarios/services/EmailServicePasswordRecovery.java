@@ -4,6 +4,12 @@ import org.springframework.stereotype.Service;
 import jakarta.mail.MessagingException;
 
 @Service
+/**
+ * nombre_clase: EmailServicePasswordRecovery
+ * funcion: manejo de recuperación de contraseñas mediante envío de correos
+ * flujo_en_el_que_participa: recuperación de contraseña
+ * comunicacion: GmailService
+ */
 public class EmailServicePasswordRecovery extends EmailService {
 
     private final GmailService gmailService;
@@ -12,6 +18,12 @@ public class EmailServicePasswordRecovery extends EmailService {
         this.gmailService = gmailService;
     }
 
+    /**
+     * nombre_metodo: sendEmail
+     * parametros: destinatario, params
+     * funcion: envía email de recuperación de contraseña
+     * flujo_en_el_que_participa: recuperación de contraseña
+     */
     /**
      * Envía email de recuperación de contraseña
      * Params esperados:

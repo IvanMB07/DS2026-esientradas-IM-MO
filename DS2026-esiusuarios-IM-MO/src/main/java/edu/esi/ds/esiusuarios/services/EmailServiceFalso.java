@@ -3,10 +3,22 @@ package edu.esi.ds.esiusuarios.services;
 import org.springframework.stereotype.Service;
 
 @Service
+/**
+ * nombre_clase: EmailServiceFalso
+ * funcion: simulación de envío de correos para pruebas y desarrollo
+ * flujo_en_el_que_participa: pruebas de notificaciones sin envío real
+ * comunicacion: consola del sistema
+ */
 public class EmailServiceFalso extends EmailService {
 
     // edu.esi.ds.esiusuarios.services.EmailServiceFalso.java
 
+    /**
+     * nombre_metodo: sendEmail
+     * parametros: destinatario, params
+     * funcion: simula envío de email imprimiendo en consola
+     * flujo_en_el_que_participa: pruebas
+     */
     @Override
     public void sendEmail(String destinatario, Object... params) {
         String asunto = (String) params[0];

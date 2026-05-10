@@ -12,6 +12,12 @@ import { catchError, map, switchMap } from 'rxjs/operators';
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
+/**
+ * nombre_clase: App
+ * funcion: componente raíz de la aplicación Angular
+ * flujo_en_el_que_participa: renderizado de la interfaz principal
+ * comunicacion: Auth service, routing
+ */
 export class App {
   isLoggedIn$: Observable<string | null>;
   isAdmin$: Observable<boolean>;
@@ -25,6 +31,12 @@ export class App {
     );
   }
 
+  /**
+   * nombre_metodo: logout
+   * parametros: ninguno
+   * funcion: cierra la sesión del usuario
+   * flujo_en_el_que_participa: logout
+   */
   logout() {
     this.auth.logout();
   }

@@ -15,6 +15,12 @@ declare let Stripe: any;
   templateUrl: './compra.html',
   styleUrl: './compra.css',
 })
+/**
+ * nombre_clase: Compra
+ * funcion: componente para el proceso de compra de entradas con integración de Stripe
+ * flujo_en_el_que_participa: compra de entradas
+ * comunicacion: servicios Pagos y Auth, backend de entradas
+ */
 export class Compra implements OnInit {
 
   entradas: any[] = [];

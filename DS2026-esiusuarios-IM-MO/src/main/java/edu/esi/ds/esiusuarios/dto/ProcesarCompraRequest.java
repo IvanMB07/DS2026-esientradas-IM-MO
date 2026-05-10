@@ -9,6 +9,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
+ * nombre_clase: ProcesarCompraRequest
+ * funcion: objeto de transferencia para procesamiento de compras
+ * flujo_en_el_que_participa: procesamiento de compras
+ * comunicacion: esientradas, controladores
+ */
+/**
  * ProcesarCompraRequest - DTO para recibir datos de compra desde esientradas
  */
 public class ProcesarCompraRequest {

@@ -20,6 +20,12 @@ import jakarta.activation.DataHandler;
 import jakarta.mail.util.ByteArrayDataSource;
 
 @Service
+/**
+ * nombre_clase: GmailService
+ * funcion: envío de correos electrónicos utilizando SMTP de Gmail
+ * flujo_en_el_que_participa: envío de facturas y notificaciones
+ * comunicacion: servidor SMTP de Gmail
+ */
 public class GmailService {
 
     private final String username;
@@ -32,6 +38,12 @@ public class GmailService {
         this.appPassword = System.getenv("EMAIL_PWD");
     }
 
+    /**
+     * nombre_metodo: sendHtmlEmail
+     * parametros: to, subject, htmlContent
+     * funcion: envía email HTML usando Gmail SMTP
+     * flujo_en_el_que_participa: notificaciones
+     */
     public void sendHtmlEmail(String to, String subject, String htmlContent) throws MessagingException {
         Properties props = new Properties();
         props.put("mail.smtp.auth", "true");
@@ -58,6 +70,12 @@ public class GmailService {
         Transport.send(message);
     }
 
+    /**
+     * nombre_metodo: sendHtmlEmailWithAttachment
+     * parametros: to, subject, htmlContent, pdfBytes
+     * funcion: envía email HTML con adjunto PDF usando Gmail SMTP
+     * flujo_en_el_que_participa: envío de facturas
+     */
     public void sendHtmlEmailWithAttachment(String to, String subject, String htmlContent, byte[] pdfBytes)
             throws MessagingException {
         Properties props = new Properties();
@@ -98,6 +116,12 @@ public class GmailService {
         Transport.send(message);
     }
 
+    /**
+     * nombre_metodo: sendFacturaEmail
+     * parametros: to, pdfBytes, qrBase64
+     * funcion: envía email con factura PDF y QR opcional
+     * flujo_en_el_que_participa: confirmación de compra
+     */
     public void sendFacturaEmail(String to, byte[] pdfBytes, String qrBase64) throws MessagingException {
         String html = emailTemplateService.generateEmail(
                 to,

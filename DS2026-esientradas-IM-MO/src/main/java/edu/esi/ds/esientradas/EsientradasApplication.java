@@ -9,6 +9,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @SpringBootApplication
 @EnableScheduling
+/**
+ * nombre_clase: EsientradasApplication
+ * funcion: punto de entrada principal de la aplicación Spring Boot para gestión
+ * de entradas
+ * flujo_en_el_que_participa: inicialización de la aplicación
+ * comunicacion: configuración de CORS y otros beans
+ */
 public class EsientradasApplication {
 
 	public static void main(String[] args) {

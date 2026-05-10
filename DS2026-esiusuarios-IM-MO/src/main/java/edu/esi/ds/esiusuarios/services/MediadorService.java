@@ -21,6 +21,16 @@ import java.util.Map;
  * - Fácil extensión con nuevas funcionalidades
  */
 @Service
+/**
+ * nombre_clase: MediadorService
+ * funcion: orquestador centralizado de procesos de tickets
+ * flujo_en_el_que_participa: procesamiento de compras
+ * comunicacion: PdfService, QrService, GmailService
+ */
+/**
+ * NOTA DE MANTENIMIENTO:
+ * Clase en uso activo en el flujo principal de procesamiento de compras.
+ */
 public class MediadorService {
 
     @Autowired
@@ -32,6 +42,12 @@ public class MediadorService {
     @Autowired
     private GmailService gmailService;
 
+    /**
+     * nombre_metodo: procesarCompra
+     * parametros: email, entradasData
+     * funcion: procesa una compra completa generando factura, QR y enviando correo
+     * flujo_en_el_que_participa: procesamiento de compras
+     */
     /**
      * Procesa una compra completa: genera factura, QR y envía por correo
      * 

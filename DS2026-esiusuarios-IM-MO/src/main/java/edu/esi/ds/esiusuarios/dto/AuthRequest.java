@@ -4,6 +4,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * nombre_clase: AuthRequest
+ * funcion: objeto de transferencia para autenticación
+ * flujo_en_el_que_participa: logout y validación de token
+ * comunicacion: controladores y servicios
+ */
 public class AuthRequest {
     @NotBlank
     @Email

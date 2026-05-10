@@ -14,6 +14,12 @@ import edu.esi.ds.esiusuarios.model.User;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
+/**
+ * nombre_clase: UserController
+ * funcion: control de endpoints para gestión de usuarios
+ * flujo_en_el_que_participa: registro, login, recuperación de contraseña
+ * comunicacion: frontend Angular
+ */
 @RequestMapping("/users")
 public class UserController {
 
@@ -44,6 +50,12 @@ public class UserController {
         return ResponseEntity.ok(token);
     }
 
+    /**
+     * nombre_metodo: registrar
+     * parametros: request
+     * funcion: registra un nuevo usuario
+     * flujo_en_el_que_participa: registro
+     */
     @PostMapping("/register")
     public ResponseEntity<String> registrar(@Valid @RequestBody RegisterRequest request) {
         if (!request.getPwd1().equals(request.getPwd2())) {
@@ -63,6 +75,12 @@ public class UserController {
         }
     }
 
+    /**
+     * nombre_metodo: logout
+     * parametros: request
+     * funcion: invalida la sesión del usuario
+     * flujo_en_el_que_participa: logout
+     */
     @PostMapping("/logout")
     public void logout(@Valid @RequestBody AuthRequest request) {
         boolean exito = this.service.logout(request.getEmail(), request.getToken());
@@ -71,6 +89,12 @@ public class UserController {
         }
     }
 
+    /**
+     * nombre_metodo: forgotPassword
+     * parametros: request
+     * funcion: solicita recuperación de contraseña
+     * flujo_en_el_que_participa: recuperación de contraseña
+     */
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@Valid @RequestBody EmailRequest request) {
         if (loginAttemptService.isBlocked(request.getEmail())) {
@@ -80,6 +104,12 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * nombre_metodo: loginStatus
+     * parametros: email
+     * funcion: obtiene estado de bloqueo de cuenta por intentos fallidos
+     * flujo_en_el_que_participa: validación de seguridad
+     */
     @GetMapping("/login-status")
     public Map<String, Object> loginStatus(@RequestParam String email) {
         if (email == null || email.isBlank()) {
@@ -88,6 +118,12 @@ public class UserController {
         return buildBlockStatus(email);
     }
 
+    /**
+     * nombre_metodo: resetPassword
+     * parametros: request, origin, referer
+     * funcion: resetea la contraseña usando token de recuperación
+     * flujo_en_el_que_participa: recuperación de contraseña
+     */
     @PostMapping("/reset-password")
     public void resetPassword(@Valid @RequestBody ResetPasswordRequest request,
             @RequestHeader(value = "Origin", required = false) String origin,
@@ -102,6 +138,12 @@ public class UserController {
         }
     }
 
+    /**
+     * nombre_metodo: cancelar
+     * parametros: request
+     * funcion: cancela la cuenta del usuario
+     * flujo_en_el_que_participa: eliminación de cuenta
+     */
     @DeleteMapping("/cancel")
     public void cancelar(@Valid @RequestBody AuthRequest request) {
         String emailValidado = this.service.checkToken(request.getToken());
@@ -111,6 +153,12 @@ public class UserController {
         this.service.cancelarCuenta(request.getEmail());
     }
 
+    /**
+     * nombre_metodo: perfil
+     * parametros: request
+     * funcion: obtiene el perfil del usuario autenticado
+     * flujo_en_el_que_participa: gestión de perfil
+     */
     @PostMapping("/profile")
     public Map<String, String> perfil(@Valid @RequestBody AuthRequest request) {
         var perfil = this.service.obtenerPerfil(request.getEmail(), request.getToken());
@@ -125,6 +173,12 @@ public class UserController {
         return response;
     }
 
+    /**
+     * nombre_metodo: cambiarPassword
+     * parametros: request
+     * funcion: cambia la contraseña del usuario
+     * flujo_en_el_que_participa: gestión de contraseña
+     */
     @PostMapping("/profile/change-password")
     public void cambiarPassword(@Valid @RequestBody ChangePasswordRequest request) {
         boolean exito = this.service.cambiarPassword(request.getEmail(), request.getToken(),
@@ -134,6 +188,12 @@ public class UserController {
         }
     }
 
+    /**
+     * nombre_metodo: eliminarCuentaPropia
+     * parametros: request
+     * funcion: elimina la cuenta propia del usuario
+     * flujo_en_el_que_participa: eliminación de cuenta
+     */
     @PostMapping("/profile/delete-account")
     public void eliminarCuentaPropia(@Valid @RequestBody AuthRequest request) {
         boolean exito = this.service.eliminarCuentaPropia(request.getEmail(), request.getToken());
@@ -142,6 +202,12 @@ public class UserController {
         }
     }
 
+    /**
+     * nombre_metodo: cambiarRol
+     * parametros: request
+     * funcion: cambia el rol de un usuario por un administrador
+     * flujo_en_el_que_participa: gestión de roles
+     */
     // --- GESTIÓN DE ROLES (ADMIN) ---
 
     @PostMapping("/change-role")
@@ -165,6 +231,12 @@ public class UserController {
         return response;
     }
 
+    /**
+     * nombre_metodo: obtenerRol
+     * parametros: request
+     * funcion: obtiene el rol del usuario por token
+     * flujo_en_el_que_participa: gestión de roles
+     */
     @PostMapping("/get-role")
     public Map<String, String> obtenerRol(@Valid @RequestBody TokenRequest request) {
         String token = request.getToken();
@@ -179,6 +251,12 @@ public class UserController {
         return response;
     }
 
+    /**
+     * nombre_metodo: listarUsuariosAdmin
+     * parametros: request
+     * funcion: lista todos los usuarios para administración
+     * flujo_en_el_que_participa: administración
+     */
     @PostMapping("/admin/users")
     public List<Map<String, String>> listarUsuariosAdmin(@Valid @RequestBody AdminAuthRequest request) {
         Iterable<User> usuarios = this.service.listarUsuarios(request.getAdminEmail(), request.getAdminToken());
@@ -197,6 +275,12 @@ public class UserController {
         return response;
     }
 
+    /**
+     * nombre_metodo: eliminarUsuarioAdmin
+     * parametros: email, request
+     * funcion: elimina un usuario por un administrador
+     * flujo_en_el_que_participa: administración
+     */
     @DeleteMapping("/admin/users/{email}")
     public void eliminarUsuarioAdmin(@PathVariable String email, @Valid @RequestBody AdminAuthRequest request) {
         boolean exito = this.service.eliminarUsuarioAdmin(request.getAdminEmail(), request.getAdminToken(), email);
@@ -205,6 +289,12 @@ public class UserController {
         }
     }
 
+    /**
+     * nombre_metodo: blockedResponse
+     * parametros: email, message
+     * funcion: construye respuesta de cuenta bloqueada
+     * flujo_en_el_que_participa: control de intentos fallidos
+     */
     private ResponseEntity<Map<String, Object>> blockedResponse(String email, String message) {
         Map<String, Object> payload = buildBlockStatus(email);
         payload.put("message", message);
@@ -213,12 +303,24 @@ public class UserController {
                 .body(payload);
     }
 
+    /**
+     * nombre_metodo: buildFailureResponse
+     * parametros: email, message
+     * funcion: construye respuesta de fallo de login
+     * flujo_en_el_que_participa: autenticación
+     */
     private Map<String, Object> buildFailureResponse(String email, String message) {
         Map<String, Object> payload = buildBlockStatus(email);
         payload.put("message", message);
         return payload;
     }
 
+    /**
+     * nombre_metodo: buildBlockStatus
+     * parametros: email
+     * funcion: construye información de estado de bloqueo
+     * flujo_en_el_que_participa: control de intentos
+     */
     private Map<String, Object> buildBlockStatus(String email) {
         Map<String, Object> payload = new HashMap<>();
         boolean blocked = loginAttemptService.isBlocked(email);
@@ -230,6 +332,12 @@ public class UserController {
         return payload;
     }
 
+    /**
+     * nombre_metodo: isTrustedFrontendRequest
+     * parametros: origin, referer
+     * funcion: valida que la solicitud proceda del frontend autorizado
+     * flujo_en_el_que_participa: validación de origen
+     */
     private boolean isTrustedFrontendRequest(String origin, String referer) {
         String trustedOrigin = "http://localhost:4200";
         if (origin != null && origin.equalsIgnoreCase(trustedOrigin)) {

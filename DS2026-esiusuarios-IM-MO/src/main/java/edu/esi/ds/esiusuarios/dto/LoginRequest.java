@@ -3,6 +3,12 @@ package edu.esi.ds.esiusuarios.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * nombre_clase: LoginRequest
+ * funcion: objeto de transferencia para login
+ * flujo_en_el_que_participa: autenticación
+ * comunicacion: controladores y servicios
+ */
 public class LoginRequest {
     @NotBlank
     @Email

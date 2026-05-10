@@ -8,6 +8,12 @@ import java.util.Map;
 import java.util.Locale;
 
 @Service
+/**
+ * nombre_clase: LoginAttemptService
+ * funcion: control de intentos de login para prevenir ataques de fuerza bruta
+ * flujo_en_el_que_participa: autenticación de usuarios
+ * comunicacion: almacenamiento en memoria concurrente
+ */
 public class LoginAttemptService {
     // Configuramos los límites según el estándar OWASP A07
     private final int MAX_ATTEMPTS = 5;
@@ -17,16 +23,34 @@ public class LoginAttemptService {
     private final Map<String, Integer> attemptsCache = new ConcurrentHashMap<>();
     private final Map<String, LocalDateTime> blockTimeCache = new ConcurrentHashMap<>();
 
+    /**
+     * nombre_metodo: normalizeKey
+     * parametros: key
+     * funcion: normaliza la clave para consistencia
+     * flujo_en_el_que_participa: gestión de intentos
+     */
     private String normalizeKey(String key) {
         return key == null ? "" : key.trim().toLowerCase(Locale.ROOT);
     }
 
+    /**
+     * nombre_metodo: loginSucceeded
+     * parametros: key
+     * funcion: resetea los intentos tras login exitoso
+     * flujo_en_el_que_participa: autenticación exitosa
+     */
     public void loginSucceeded(String key) {
         key = normalizeKey(key);
         attemptsCache.remove(key);
         blockTimeCache.remove(key);
     }
 
+    /**
+     * nombre_metodo: loginFailed
+     * parametros: key
+     * funcion: incrementa intentos y bloquea si excede límite
+     * flujo_en_el_que_participa: autenticación fallida
+     */
     public void loginFailed(String key) {
         key = normalizeKey(key);
         int attempts = attemptsCache.getOrDefault(key, 0);
@@ -38,6 +62,12 @@ public class LoginAttemptService {
         }
     }
 
+    /**
+     * nombre_metodo: isBlocked
+     * parametros: key
+     * funcion: verifica si la clave está bloqueada
+     * flujo_en_el_que_participa: control de acceso
+     */
     public boolean isBlocked(String key) {
         key = normalizeKey(key);
         if (blockTimeCache.containsKey(key)) {

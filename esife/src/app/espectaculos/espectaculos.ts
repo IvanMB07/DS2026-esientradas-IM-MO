@@ -15,6 +15,12 @@ import { catchError, switchMap } from 'rxjs/operators';
   templateUrl: './espectaculos.html',
   styleUrl: './espectaculos.css',
 })
+/**
+ * nombre_clase: Espectaculos
+ * funcion: componente para visualización y búsqueda de espectáculos
+ * flujo_en_el_que_participa: búsqueda y selección de entradas
+ * comunicacion: EspectaculosService, Auth, Router, API de Stripe
+ */
 export class Espectaculos implements OnInit {
 
   escenarios: any[] = [];

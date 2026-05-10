@@ -16,6 +16,12 @@ export interface LoginStatusResponse {
 @Injectable({
   providedIn: 'root'
 })
+/**
+ * nombre_clase: Auth
+ * funcion: servicio de autenticación para login, registro y gestión de tokens
+ * flujo_en_el_que_participa: autenticación de usuarios en el frontend
+ * comunicacion: backend de usuarios
+ */
 export class Auth {
   private usersUrl = 'http://localhost:8081/users';
   private reservasUrl = 'http://localhost:8080/reservas';

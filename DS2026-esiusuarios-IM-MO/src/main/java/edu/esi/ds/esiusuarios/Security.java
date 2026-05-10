@@ -16,6 +16,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.validation.FieldError;
 
+/**
+ * nombre_clase: Security
+ * funcion: manejo centralizado de excepciones y seguridad
+ * flujo_en_el_que_participa: gestión de errores y respuestas HTTP
+ * comunicacion: controladores y clientes HTTP
+ */
 public class Security {
 
     @ControllerAdvice
@@ -23,6 +29,12 @@ public class Security {
 
         private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+        /**
+         * nombre_metodo: handleHttpMessageNotReadable
+         * parametros: ex
+         * funcion: maneja errores de lectura de JSON
+         * flujo_en_el_que_participa: manejo de excepciones
+         */
         /**
          * CAPTURA: Errores de lectura de JSON (campos extra, JSON mal formado).
          * RESULTADO: 400 Bad Request (en lugar de 500).
@@ -37,6 +49,12 @@ public class Security {
             return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
         }
 
+        /**
+         * nombre_metodo: handleValidationErrors
+         * parametros: ex
+         * funcion: maneja errores de validación de anotaciones
+         * flujo_en_el_que_participa: manejo de excepciones
+         */
         /**
          * CAPTURA: Fallos en las anotaciones de validación
          * (@Email, @Size, @NotBlank, @Pattern).
@@ -63,6 +81,12 @@ public class Security {
         }
 
         /**
+         * nombre_metodo: handleResponseStatusException
+         * parametros: ex
+         * funcion: maneja excepciones de estado HTTP controladas
+         * flujo_en_el_que_participa: manejo de excepciones
+         */
+        /**
          * CAPTURA: Errores controlados del negocio (ResponseStatusException).
          * RESULTADO: Preserva el código de estado y mensaje original.
          */
@@ -76,6 +100,12 @@ public class Security {
             return new ResponseEntity<>(response, ex.getStatusCode());
         }
 
+        /**
+         * nombre_metodo: handleAllExceptions
+         * parametros: ex
+         * funcion: maneja todas las excepciones inesperadas
+         * flujo_en_el_que_participa: manejo de errores críticos
+         */
         /**
          * CAPTURA: Cualquier otro error inesperado en el servidor.
          * RESULTADO: 500 Internal Server Error.

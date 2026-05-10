@@ -5,6 +5,12 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 
+/**
+ * nombre_clase: EntradaData
+ * funcion: objeto de transferencia para datos de entrada
+ * flujo_en_el_que_participa: procesamiento de compras
+ * comunicacion: controladores y servicios
+ */
 public class EntradaData {
     @NotNull(message = "El ID de entrada es obligatorio")
     private Long id;

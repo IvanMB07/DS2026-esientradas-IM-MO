@@ -17,6 +17,12 @@ export interface UserProfile {
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.css'
 })
+/**
+ * nombre_clase: ProfileComponent
+ * funcion: componente para visualización y edición del perfil de usuario
+ * flujo_en_el_que_participa: gestión de perfil de usuario
+ * comunicacion: backend de usuarios
+ */
 export class ProfileComponent implements OnInit {
   profile: UserProfile | null = null;
   isLoading = true;

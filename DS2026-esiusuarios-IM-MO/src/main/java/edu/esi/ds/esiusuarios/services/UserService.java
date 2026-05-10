@@ -18,6 +18,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 @Service
+/**
+ * nombre_clase: UserService
+ * funcion: gestión de usuarios, autenticación, registro y operaciones
+ * relacionadas
+ * flujo_en_el_que_participa: autenticación, registro, recuperación de
+ * contraseña
+ * comunicacion: UserDao, EmailService, LoginAttemptService
+ */
 public class UserService implements CommandLineRunner {
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
@@ -38,6 +46,12 @@ public class UserService implements CommandLineRunner {
 
     // --- MÉTODOS DE SESIÓN ---
 
+    /**
+     * nombre_metodo: login
+     * parametros: email, password
+     * funcion: autentica al usuario y genera token de sesión
+     * flujo_en_el_que_participa: autenticación
+     */
     @Transactional
     public String login(String email, String password) {
         String loginEmail = email == null ? null : email.trim();
@@ -73,6 +87,12 @@ public class UserService implements CommandLineRunner {
 
     // --- RECUPERACIÓN DE CONTRASEÑA ---
 
+    /**
+     * nombre_metodo: solicitarRecuperacion
+     * parametros: email
+     * funcion: solicita recuperación de contraseña enviando email
+     * flujo_en_el_que_participa: recuperación de contraseña
+     */
     @Transactional
     public void solicitarRecuperacion(String email) {
         // 1. [A07] Comprobamos si ya está bloqueado (por logins o peticiones previas)
@@ -105,6 +125,12 @@ public class UserService implements CommandLineRunner {
 
     // --- RESTO DE MÉTODOS (IGUAL QUE LOS TENÍAS) ---
 
+    /**
+     * nombre_metodo: registrar
+     * parametros: email, password
+     * funcion: registra un nuevo usuario
+     * flujo_en_el_que_participa: registro
+     */
     @Transactional
     public String registrar(String email, String password) {
         if (email == null || !email.matches(EMAIL_PATTERN))
@@ -127,6 +153,12 @@ public class UserService implements CommandLineRunner {
         return rawToken;
     }
 
+    /**
+     * nombre_metodo: checkToken
+     * parametros: rawToken
+     * funcion: valida el token de sesión
+     * flujo_en_el_que_participa: validación de sesión
+     */
     public String checkToken(String rawToken) {
         if (rawToken == null)
             return null;
@@ -135,6 +167,12 @@ public class UserService implements CommandLineRunner {
         return uOpt.map(User::getEmail).orElse(null);
     }
 
+    /**
+     * nombre_metodo: resetearPassword
+     * parametros: rawToken, newPassword
+     * funcion: resetea la contraseña usando token de recuperación
+     * flujo_en_el_que_participa: recuperación de contraseña
+     */
     @Transactional
     public boolean resetearPassword(String rawToken, String newPassword) {
         if (rawToken == null)
@@ -155,12 +193,24 @@ public class UserService implements CommandLineRunner {
         return false;
     }
 
+    /**
+     * nombre_metodo: cancelarCuenta
+     * parametros: email
+     * funcion: elimina la cuenta del usuario
+     * flujo_en_el_que_participa: eliminación de cuenta
+     */
     @Transactional
     public void cancelarCuenta(String email) {
         userDao.deleteById(email);
         logger.info("Cuenta eliminada: {}", email);
     }
 
+    /**
+     * nombre_metodo: logout
+     * parametros: email, rawToken
+     * funcion: invalida el token de sesión
+     * flujo_en_el_que_participa: logout
+     */
     @Transactional
     public boolean logout(String email, String rawToken) {
         if (rawToken == null)
@@ -176,6 +226,12 @@ public class UserService implements CommandLineRunner {
         return false;
     }
 
+    /**
+     * nombre_metodo: hashToken
+     * parametros: rawToken
+     * funcion: hashea el token para almacenamiento seguro
+     * flujo_en_el_que_participa: seguridad de tokens
+     */
     private String hashToken(String rawToken) {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
@@ -196,6 +252,12 @@ public class UserService implements CommandLineRunner {
 
     // --- GESTIÓN DE ROLES ---
 
+    /**
+     * nombre_metodo: cambiarRol
+     * parametros: adminEmail, targetEmail, newRole
+     * funcion: cambia el rol de un usuario
+     * flujo_en_el_que_participa: gestión de roles
+     */
     /**
      * Cambiar el rol de un usuario (solo para ADMIN)
      * 
@@ -248,6 +310,12 @@ public class UserService implements CommandLineRunner {
     }
 
     /**
+     * nombre_metodo: esAdmin
+     * parametros: email
+     * funcion: verifica si el usuario es administrador
+     * flujo_en_el_que_participa: autorización
+     */
+    /**
      * Verificar si un usuario es ADMIN
      * 
      * @param email Email del usuario
@@ -259,6 +327,12 @@ public class UserService implements CommandLineRunner {
     }
 
     /**
+     * nombre_metodo: obtenerRol
+     * parametros: email
+     * funcion: obtiene el rol del usuario
+     * flujo_en_el_que_participa: gestión de roles
+     */
+    /**
      * Obtener el rol de un usuario
      * 
      * @param email Email del usuario
@@ -269,6 +343,12 @@ public class UserService implements CommandLineRunner {
         return userOpt.map(user -> user.getRole() == null ? UserRole.USER : user.getRole()).orElse(null);
     }
 
+    /**
+     * nombre_metodo: obtenerPerfil
+     * parametros: email, rawToken
+     * funcion: obtiene el perfil del usuario autenticado
+     * flujo_en_el_que_participa: gestión de perfil
+     */
     /**
      * Devuelve el perfil de un usuario autenticado.
      */
@@ -285,6 +365,12 @@ public class UserService implements CommandLineRunner {
         return Optional.empty();
     }
 
+    /**
+     * nombre_metodo: cambiarPassword
+     * parametros: email, rawToken, currentPassword, newPassword
+     * funcion: cambia la contraseña del usuario autenticado
+     * flujo_en_el_que_participa: gestión de contraseña
+     */
     /**
      * Cambia la contraseña de un usuario autenticado.
      */
@@ -308,6 +394,12 @@ public class UserService implements CommandLineRunner {
     }
 
     /**
+     * nombre_metodo: eliminarCuentaPropia
+     * parametros: email, rawToken
+     * funcion: elimina la cuenta del usuario autenticado
+     * flujo_en_el_que_participa: eliminación de cuenta
+     */
+    /**
      * Elimina la cuenta de un usuario autenticado.
      */
     @Transactional
@@ -322,6 +414,12 @@ public class UserService implements CommandLineRunner {
         return true;
     }
 
+    /**
+     * nombre_metodo: listarUsuarios
+     * parametros: adminEmail, adminToken
+     * funcion: lista todos los usuarios para administración
+     * flujo_en_el_que_participa: administración
+     */
     /**
      * Lista todos los usuarios para el panel de administración.
      */
@@ -339,6 +437,12 @@ public class UserService implements CommandLineRunner {
         return userDao.findAll();
     }
 
+    /**
+     * nombre_metodo: eliminarUsuarioAdmin
+     * parametros: adminEmail, adminToken, targetEmail
+     * funcion: elimina un usuario por un administrador
+     * flujo_en_el_que_participa: administración
+     */
     /**
      * Elimina a otro usuario. Solo ADMIN.
      */
@@ -366,6 +470,12 @@ public class UserService implements CommandLineRunner {
         return true;
     }
 
+    /**
+     * nombre_metodo: run
+     * parametros: args
+     * funcion: inicializa roles de usuarios existentes
+     * flujo_en_el_que_participa: inicialización
+     */
     @Override
     public void run(String... args) {
         for (User user : userDao.findAll()) {
